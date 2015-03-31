@@ -1,6 +1,31 @@
 #!/bin/bash
 # commands run to provision host after startup
 
+_usage()
+{
+    prog=${0##*/}
+    for info in "$@"; do
+        echo "$prog: $@"
+    done
+    echo "Usage: $prog <[-b][-d][-r]>"
+    echo "  environment type (choose all desired zimbra related environments):"
+    echo "    -b  == build"
+    echo "    -d  == development"
+    echo "    -r  == runtime (for dev/test)"
+}
+
+while getopts a opt; do
+    case "$opt" in
+    b) buildenv=1 ;;
+    d) devenv=1 ;;
+    r) runenv=1 ;;
+    ?) _usage && exit 2;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+[ "$#" -eq 0 ] && _usage && exit 1
+
 # see also:
 # http://wiki.eng.zimbra.com/index.php/ZimbraMaven#Jars_which_are_not_available_in_Maven
 # - Zimbra patched jars files are in ZimbraCommon/jars-bootstrap in perforce
@@ -13,17 +38,28 @@ dist=`lsb_release -is`
 [ "$dist" != "Ubuntu" ] && echo "$0 is for Ubuntu, not '$dist'" && exit 1
 
 export DEBIAN_FRONTEND=noninteractive
-MYSQLPASS="zimbra"
 
-# runtime
-_install curl netcat memcached redis-server
-_install_mysql_server
+# dev+run
+if [ -n "$devenv" -o -n "$runenv" ]; then
+    MYSQLPASS="zimbra"
+    _install curl netcat memcached redis-server
+    _install_mysql_server
+    _install_consul 0.5.0
+fi
 
-_install_consul 0.5.0
+# build+dev+run
 _install_java 8
 
-_install_devtools # ant maven reviewboard
-_install_buildtools # compilers, dev headers/libs, packaging, ...
+# build
+if [ -n "$buildenv" ]; then
+    _install_maven
+    _install_buildtools # compilers, dev headers/libs, packaging, ...
+fi
+
+# dev
+if [ -n "$devenv" ]; then
+    _install_devtools # reviewboard
+fi
 
 ###
 _install()
@@ -44,12 +80,8 @@ _add_repo()
     apt-get update -qq
 }
 
-_install_devtools()
+_install_zdevtools()
 {
-    # for java development
-    _add_repo ppa:andrei-pozolotin/maven3
-    _install ant maven3
-
     # reviewboard
     _install python-setuptools
     easy_install -U RBTools # - if not done in primary environment
@@ -69,6 +101,13 @@ _install_buildtools()
       libreadline-dev libbz2-dev libaio-dev cloog-ppl libperl-dev
 
     _install dh-make build-essential devscripts fakeroot debootstrap pbuilder
+}
+
+_install_maven()
+{
+    # for java development
+    _add_repo ppa:andrei-pozolotin/maven3
+    _install ant maven3
 }
 
 # known versions: 7 8
