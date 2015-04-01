@@ -12,9 +12,11 @@
 MYSQLPASS="zimbra"
 P4CLIENTURL="http://cdist2.perforce.com/perforce/r15.1/bin.linux26x86_64/p4"
 
+export DEBIAN_FRONTEND=noninteractive
+
 prog=${0##*/}
 dist=`lsb_release -is`
-[ "$dist" != "Ubuntu" ] && echo "$0 is for Ubuntu, not '$dist'" && exit 1
+[ "$dist" != "Ubuntu" ] && echo "$prog is for Ubuntu, not '$dist'" && exit 1
 
 echo()
 {
@@ -54,7 +56,6 @@ shift $((OPTIND-1))
 
 main()
 {
-    export DEBIAN_FRONTEND=noninteractive
     env_all_pre
     [ -n "$devenv" ] && env_dev
     [ -n "$devenv" -o -n "$runenv" ] && env_dev_run
@@ -65,6 +66,7 @@ main()
 # build+dev+run
 env_all_pre()
 {
+    return
 }
 
 env_all_post()

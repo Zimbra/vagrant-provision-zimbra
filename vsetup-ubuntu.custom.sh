@@ -1,8 +1,16 @@
 #!/bin/bash
 # commands run to provision host after startup
 
+export DEBIAN_FRONTEND=noninteractive
+
+prog=${0##*/}
 dist=`lsb_release -is`
-[ "$dist" != "Ubuntu" ] && echo "$0 is for Ubuntu, not '$dist'" && exit 1
+[ "$dist" != "Ubuntu" ] && echo "$prog is for Ubuntu, not '$dist'" && exit 1
+
+echo()
+{
+    builtin echo `date --rfc-3339=s`: $prog "$@"
+}
 
 main()
 {
