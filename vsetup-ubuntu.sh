@@ -11,6 +11,7 @@
 
 MYSQLPASS="zimbra"
 P4CLIENTURL="http://cdist2.perforce.com/perforce/r15.1/bin.linux26x86_64/p4"
+ZIMBRA_HOME="/opt/zimbra"
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -66,7 +67,16 @@ main()
 # build+dev+run
 env_all_pre()
 {
-    return
+    echo "checking: $ZIMBRA_HOME"
+    if [ -n "$ZIMBRA_HOME" ]; then
+        if [ ! -d "$ZIMBRA_HOME" ]; then
+            echo "mkdir $ZIMBRA_HOME" && mkdir -p "$ZIMBRA_HOME"
+            # perms of 1777 are debatable...
+            if [ -n "$devenv" -o -n "$buildenv" ]; then
+                echo "chmod 1777 $ZIMBRA_HOME" && chmod 1777 "$ZIMBRA_HOME"
+            fi
+        fi
+    fi
 }
 
 env_all_post()
