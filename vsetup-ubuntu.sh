@@ -28,10 +28,13 @@ usage()
     done
     cat <<EOF
 Usage: $prog <[-b][-d][-r]>
-  environment type (choose all desired zimbra related environments):"
-    -b  == build"
-    -d  == development"
-    -r  == runtime (for dev/test)"
+  environment type (choose all desired zimbra related environments):
+    -b  == build       ThirdParty FOSS (gcc,headers,libs,etc.)
+    -d  == development Full ZCS builds (ant,fpm,java,maven,...)
+    -r  == runtime     consul, mariadb, redis, memcached
+
+  Note: runtime uses non-standard ZCS components (instead of
+        building the components from ThirdParty)
 EOF
 }
 
@@ -62,7 +65,6 @@ main()
 # build+dev+run
 env_all_pre()
 {
-    _install_java 8
 }
 
 env_all_post()
@@ -74,12 +76,14 @@ env_all_post()
 # dev
 env_dev()
 {
+    _install_ant_maven
     _install_zdevtools # reviewboard
 }
 
 # dev+run
 env_dev_run()
 {
+    _install_java 8
     _install curl netcat memcached redis-server
     _install_mariadb_server
     _install_consul 0.5.0
@@ -88,7 +92,6 @@ env_dev_run()
 # build
 env_build()
 {
-    _install_maven
     _install_buildtools # compilers, dev headers/libs, packaging, ...
 }
 
@@ -139,7 +142,7 @@ _install_buildtools()
     _install dh-make build-essential devscripts fakeroot debootstrap pbuilder
 }
 
-_install_maven()
+_install_ant_maven()
 {
     # for java development
     _add_repo ppa:andrei-pozolotin/maven3
