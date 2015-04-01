@@ -1,31 +1,6 @@
 #!/bin/bash
 # commands run to provision host after startup
 
-_usage()
-{
-    prog=${0##*/}
-    for info in "$@"; do
-        echo "$prog: $@"
-    done
-    echo "Usage: $prog <[-b][-d][-r]>"
-    echo "  environment type (choose all desired zimbra related environments):"
-    echo "    -b  == build"
-    echo "    -d  == development"
-    echo "    -r  == runtime (for dev/test)"
-}
-
-while getopts bdr opt; do
-    case "$opt" in
-    b) buildenv=1 ;;
-    d) devenv=1 ;;
-    r) runenv=1 ;;
-    ?) _usage && exit 2;;
-    esac
-done
-shift $(($OPTIND - 1))
-
-[ "$#" -ne 0 ] && _usage && exit 1
-
 # see also:
 # http://wiki.eng.zimbra.com/index.php/ZimbraMaven#Jars_which_are_not_available_in_Maven
 # - Zimbra patched jars files are in ZimbraCommon/jars-bootstrap in perforce
@@ -34,35 +9,82 @@ shift $(($OPTIND - 1))
 #   also check ZimbraServer/mvn.seed.properties (used by ant)
 #   see also the mvn-local-jars shell script to populate the local repository
 
+MYSQLPASS="zimbra"
+
 dist=`lsb_release -is`
 [ "$dist" != "Ubuntu" ] && echo "$0 is for Ubuntu, not '$dist'" && exit 1
 
-export DEBIAN_FRONTEND=noninteractive
+usage()
+{
+    prog=${0##*/}
+    for info in "$@"; do
+        echo "$prog: $@"
+    done
+    echo <<EOF
+Usage: $prog <[-b][-d][-r]>
+  environment type (choose all desired zimbra related environments):"
+    -b  == build"
+    -d  == development"
+    -r  == runtime (for dev/test)"
+EOF
+}
+
+[ "$#" -eq 0 ] && usage "an argument is required" && exit 1
+while getopts "bdhr" opt; do
+    case "$opt" in
+        b) buildenv=1 ;;
+        d) devenv=1 ;;
+        h) usage && exit 0 ;;
+        r) runenv=1 ;;
+        \?) errors=1 ;;
+    esac
+done
+shift $((OPTIND-1))
+[ -n "$errors" ] && usage "invalid arguments" && exit 3
+[ "$#" -ne 0 ] && usage "invalid argument: $1" && exit 3
+
+main()
+{
+    export DEBIAN_FRONTEND=noninteractive
+    env_all_pre
+    [ -n "$devenv" -o -n "$runenv" ] && env_dev_run
+    [ -n "$buildenv" ] && env_build
+    [ -n "$devenv" ] && env_dev
+    env_all_post
+}
+
+# build+dev+run
+env_all_pre()
+{
+    _install_java 8
+}
+
+env_all_post()
+{
+    echo "Running dist-upgrade..."
+    apt-get update -qq && apt-get dist-upgrade -y -qq
+}
+
+# dev
+env_dev()
+{
+    _install_devtools # reviewboard
+}
 
 # dev+run
-if [ -n "$devenv" -o -n "$runenv" ]; then
-    MYSQLPASS="zimbra"
+env_dev_run()
+{
     _install curl netcat memcached redis-server
     _install_mariadb_server
     _install_consul 0.5.0
-fi
-
-# build+dev+run
-_install_java 8
+}
 
 # build
-if [ -n "$buildenv" ]; then
+env_build()
+{
     _install_maven
     _install_buildtools # compilers, dev headers/libs, packaging, ...
-fi
-
-# dev
-if [ -n "$devenv" ]; then
-    _install_devtools # reviewboard
-fi
-
-echo "Running dist-upgrade..."
-apt-get update -qq && apt-get dist-upgrade -y -qq
+}
 
 ###
 _install()
@@ -120,7 +142,7 @@ _install_java()
     for v in "$@"; do
         debconf-set-selections <<< "oracle-java${v}-installer shared/accepted-oracle-license-v1-1 select true"
         # hide the wget progress output
-        _install oracle-java${ver}-installer 2>&1 | grep -v " ........ "
+        _install oracle-java${v}-installer 2>&1 | grep --line-buffered -v " ........ "
     done
     #OFF update-java-alternatives -s java-7-oracle
 }
@@ -172,3 +194,6 @@ _mariadb_setup()
     )
     service mysql restart
 }
+
+# call main
+main
