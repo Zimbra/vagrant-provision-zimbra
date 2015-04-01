@@ -56,9 +56,9 @@ main()
 {
     export DEBIAN_FRONTEND=noninteractive
     env_all_pre
+    [ -n "$devenv" ] && env_dev
     [ -n "$devenv" -o -n "$runenv" ] && env_dev_run
     [ -n "$buildenv" ] && env_build
-    [ -n "$devenv" ] && env_dev
     env_all_post
 }
 
@@ -129,6 +129,9 @@ _install_zdevtools()
 # build environment
 _install_buildtools()
 {
+    # need jdk 1.7 to build openjdk
+    _install_java 7
+
     # fpm - https://github.com/jordansissel/fpm
     _install ruby-dev; gem install fpm
 
