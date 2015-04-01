@@ -14,7 +14,7 @@ _usage()
     echo "    -r  == runtime (for dev/test)"
 }
 
-while getopts a opt; do
+while getopts bdr opt; do
     case "$opt" in
     b) buildenv=1 ;;
     d) devenv=1 ;;
@@ -24,7 +24,7 @@ while getopts a opt; do
 done
 shift $(($OPTIND - 1))
 
-[ "$#" -eq 0 ] && _usage && exit 1
+[ "$#" -ne 0 ] && _usage && exit 1
 
 # see also:
 # http://wiki.eng.zimbra.com/index.php/ZimbraMaven#Jars_which_are_not_available_in_Maven
@@ -43,7 +43,7 @@ export DEBIAN_FRONTEND=noninteractive
 if [ -n "$devenv" -o -n "$runenv" ]; then
     MYSQLPASS="zimbra"
     _install curl netcat memcached redis-server
-    _install_mysql_server
+    _install_mariadb_server
     _install_consul 0.5.0
 fi
 
@@ -60,6 +60,9 @@ fi
 if [ -n "$devenv" ]; then
     _install_devtools # reviewboard
 fi
+
+echo "Running dist-upgrade..."
+apt-get update -qq && apt-get dist-upgrade -y -qq
 
 ###
 _install()
@@ -142,14 +145,14 @@ _install_consul()
     fi
 }
 
-_install_mysql_server() {
+_install_mariadb_server() {
     debconf-set-selections <<< "mysql-server mysql-server/root_password password $MYSQLPASS"
     debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $MYSQLPASS"
-    _install mysql-server
-    _mysql_setup
+    _install mariadb-server
+    _mariadb_setup
 }
 
-_mysql_setup()
+_mariadb_setup()
 {
     (
         pfrom=3306; pto=7306; file="/etc/mysql/my.cnf"
