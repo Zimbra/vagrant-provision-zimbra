@@ -10,17 +10,21 @@
 #   see also the mvn-local-jars shell script to populate the local repository
 
 MYSQLPASS="zimbra"
-
+prog=${0##*/}
 dist=`lsb_release -is`
 [ "$dist" != "Ubuntu" ] && echo "$0 is for Ubuntu, not '$dist'" && exit 1
 
+echo()
+{
+    builtin echo `date --rfc-3339=s`: $prog "$@"
+}
+
 usage()
 {
-    prog=${0##*/}
     for info in "$@"; do
-        echo "$prog: $@"
+        echo "$info"
     done
-    echo <<EOF
+    cat <<EOF
 Usage: $prog <[-b][-d][-r]>
   environment type (choose all desired zimbra related environments):"
     -b  == build"
@@ -30,12 +34,12 @@ EOF
 }
 
 [ "$#" -eq 0 ] && usage "an argument is required" && exit 1
-while getopts "bdhr" opt; do
+while getopts "bdrh" opt; do
     case "$opt" in
-        b) buildenv=1 ;;
-        d) devenv=1 ;;
+        b) buildenv=1; echo "selecting environment: build" ;;
+        d) devenv=1;   echo "selecting environment: development" ;;
+        r) runenv=1;   echo "selecting environment: runtime" ;;
         h) usage && exit 0 ;;
-        r) runenv=1 ;;
         \?) errors=1 ;;
     esac
 done
@@ -68,7 +72,7 @@ env_all_post()
 # dev
 env_dev()
 {
-    _install_devtools # reviewboard
+    _install_zdevtools # reviewboard
 }
 
 # dev+run
@@ -152,6 +156,7 @@ _install_java()
 #   /usr/local/bin/consul agent -server -bootstrap-expect 1 -data-dir /var/tmp/consul
 _install_consul()
 {
+    _install zip
     zip="$1"_linux_amd64.zip
     url="https://dl.bintray.com/mitchellh/consul/""$zip"
     loc="/usr/local/bin"
@@ -161,7 +166,7 @@ _install_consul()
         return
     else
       ( #  do the work in a subshell since we're CD'ing
-        cd "$loc" && wget "$url" && unzip "$zip" && rm "$zip" && chmod 755 "$bin"
+        cd "$loc" && wget -nv "$url" && unzip "$zip" && rm "$zip" && chmod 755 "$bin"
         [ ! -x "$bin" ] && echo "Consul: '$bin' install failed!"
       )
     fi
