@@ -59,8 +59,6 @@ In this file there are hints as to how to setup and use a tunnel between the VM 
 
 ## TODO
 
-- [ ] Break out of build environment to
-  - environment for third party source builds vs ZCS builds
 - [ ] CentOS setup script(s)
 - [ ] Provide more info/links on getting started with Vagrant?
 
