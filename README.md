@@ -1,8 +1,67 @@
 # vagrant-provision-zimbra
-Vagrant provisioning scripts for various Zimbra related environments
+[Vagrant](https://www.vagrantup.com/) provisioning script for various [Zimbra](https://www.zimbra.com/) related environments along with examples, notes and hints on getting things up and running.
 
-License
--------
+In order to use these, you'll need to have Vagrant [installed](https://www.vagrantup.com/downloads.html) and [get familiar](https://docs.vagrantup.com/v2/) with how to use it.
+
+## What's here...
+
+* [vsetup-ubuntu.sh](vsetup-ubuntu.sh)
+
+A vagrant provisioning script for ubuntu (known to work with 14.04 LTS):
+```
+Usage: vsetup-ubuntu.sh <[-b][-d][-r]>
+  environment type (choose all desired zimbra related environments):"
+    -b  == build"
+    -d  == development"
+    -r  == runtime (for dev/test)"
+```
+
+* [Vagrantfile-example](Vagrantfile-example)
+
+Copy this example Vagrantfile to the name 'Vagrantfile' in the location of the VM to be provisioned.  Set the variables as appropriate for your environment:
+
+```
+HOSTNAME = "zpc"          # name of VM, convenient to use same name as p4 client
+SRCDIR = "/site"          # map source directory into the VM
+HOMEDIR = "/home/ppearl"  # map my home into the VM
+
+# provisioning script and args
+#   PPATH = "./vsetup-ubuntu.sh"
+#   PARGS = ...  # -b == build, -d == dev, -r == runtime
+PPATH =
+  "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup-ubuntu.sh"
+PARGS = ["-d"]
+```
+
+Then start up the VM:
+
+```console
+$ vagrant up ubuntu/trusty64 --provider virtualbox
+```
+
+* [vsetup-ubuntu.custom.sh](vsetup-ubuntu.custom.sh)
+
+An second (example) script that could also be called via the vagrant provisioning process to setup more custom environmental related settings.
+
+In this file there are hints as to how to setup and use a tunnel between the VM and the host/laptop where you are running vagrant from.  With the right environment setup is possible to get p4 and reviewboard to work easily with code that is being shared between your host/laptop and the VM.
+
+```
+    # custom tunnel for perforce and reviewboard
+    # - connect VM ports to preexisting tunnels on my laptop via:
+    #   vagrant ssh -- -R 1066:127.1.1.1:1066 -R 1443:127.1.1.1:1443
+    # - where:
+    #   - .reviewboardrc has: REVIEWBOARD_URL="https://ztun:1443"
+    #   - .p4config has:      P4PORT=ztun:1066
+```
+
+## TODO
+
+- [ ] Break out of build environment to
+  - environment for third party source builds vs ZCS builds
+- [ ] CentOS setup script(s)
+- [ ] Provide more info/links on getting started with Vagrant?
+
+## License
 
    Copyright 2015 Phil Pearl
 
@@ -17,4 +76,3 @@ License
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-
