@@ -29,8 +29,8 @@ usage()
     cat <<EOF
 Usage: $prog <[-b][-d][-r]>
   environment type (choose all desired zimbra related environments):
-    -b  == build       ThirdParty FOSS (gcc,headers,libs,etc.)
-    -d  == development Full ZCS builds (ant,fpm,java,maven,...)
+    -b  == build       ThirdParty FOSS (fpm,gcc,headers,libs,etc.)
+    -d  == development Full ZCS builds (ant,java,maven,...)
     -r  == runtime     consul, mariadb, redis, memcached
 
   Note: runtime uses non-standard ZCS components (instead of
