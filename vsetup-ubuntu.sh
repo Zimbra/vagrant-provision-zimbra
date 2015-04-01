@@ -10,6 +10,8 @@
 #   see also the mvn-local-jars shell script to populate the local repository
 
 MYSQLPASS="zimbra"
+P4CLIENTURL="http://cdist2.perforce.com/perforce/r15.1/bin.linux26x86_64/p4"
+
 prog=${0##*/}
 dist=`lsb_release -is`
 [ "$dist" != "Ubuntu" ] && echo "$0 is for Ubuntu, not '$dist'" && exit 1
@@ -109,11 +111,16 @@ _add_repo()
     apt-get update -qq
 }
 
+_install_p4client()
+{
+    # p4 client
+    cd /usr/local/bin && wget -nv "$P4CLIENTURL" && chmod 755 p4
+}
+
 _install_zdevtools()
 {
-    # reviewboard
-    _install python-setuptools
-    easy_install -U RBTools # - if not done in primary environment
+    _install_p4client
+    _install python-setuptools && easy_install -U RBTools # reviewboard
 }
 
 # build environment
