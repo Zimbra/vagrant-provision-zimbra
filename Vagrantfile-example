@@ -1,0 +1,26 @@
+#
+HOSTNAME = "zpc"          # name of VM, convenient to use same name as p4 client
+SRCDIR = "/site"          # map source directory into the VM
+HOMEDIR = "/home/ppearl"  # map my home into the VM
+
+# provisioning script and args
+#   PPATH = "./vsetup-ubuntu.sh"
+#   PARGS = ...  # -b == build, -d == dev, -r == runtime
+PPATH =
+  "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup-ubuntu.sh"
+PARGS = ["-d"]
+
+VAGRANTFILE_API_VERSION = "2"
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "ubuntu/trusty64"
+  config.vm.host_name = HOSTNAME
+  config.vm.synced_folder HOMEDIR, HOMEDIR
+  config.vm.synced_folder SRCDIR, SRCDIR
+  config.vm.provision "shell", path: PPATH, args: PARGS
+  config.vm.provider :lxc do |lxc|
+    lxc.customize "cgroup.memory.limit_in_bytes", "2048M"
+  end
+  config.vm.provider :virtualbox do |vb|
+    vb.memory = "2048"
+  end
+end
