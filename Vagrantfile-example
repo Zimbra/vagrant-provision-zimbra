@@ -1,4 +1,5 @@
 #
+VMBOX = "ubuntu/trusty64" # ref: https://atlas.hashicorp.com/boxes/search
 HOSTNAME = "zpc"          # name of VM, convenient to use same name as p4 client
 SRCDIR = "/site"          # map source directory into the VM
 HOMEDIR = "/home/ppearl"  # map my home into the VM
@@ -12,15 +13,28 @@ PARGS = ["-d"]
 
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "ubuntu/trusty64"
+  config.vm.box = VMBOX
   config.vm.host_name = HOSTNAME
   config.vm.synced_folder HOMEDIR, HOMEDIR
-  config.vm.synced_folder SRCDIR, SRCDIR
-  config.vm.provision "shell", path: PPATH, args: PARGS
+
+  # virtualbox: mmap broken on mapped filesystems
+  # - ref: https://www.virtualbox.org/ticket/819
+  config.vm.synced_folder SRCDIR, SRCDIR #, type: "nfs"
+  # map vagrant user/grp to me, not root
+  config.nfs.map_uid = Process.uid
+  config.nfs.map_gid = Process.gid
+
   config.vm.provider :lxc do |lxc|
     lxc.customize "cgroup.memory.limit_in_bytes", "2048M"
   end
   config.vm.provider :virtualbox do |vb|
     vb.memory = "2048"
   end
+  # refs: nfs[1] with private_network[2] and dhcp conflicting host adapter[3]
+  # 1. http://docs.vagrantup.com/v2/synced-folders/nfs.html
+  # 2. http://docs.vagrantup.com/v2/networking/private_network.html
+  # 3. https://github.com/mitchellh/vagrant/issues/3083 workaround:
+  #    VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0
+  # config.vm.network "private_network", type: "dhcp"
+  config.vm.provision "shell", path: PPATH, args: PARGS
 end

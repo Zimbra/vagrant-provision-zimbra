@@ -20,7 +20,13 @@ main()
 # nice (for me) to have...
 _install_custom()
 {
-    _install emacs24-nox ispell perl-doc perltidy
+    _install emacs24-nox
+    _install ispell
+    # workaround for /usr/share/doc/dictionaries-common/README.problems
+    # ref: http://stackoverflow.com/questions/23671727/error-with-sudo-apt-get-dictionnary-commons-since-update-to-ubuntu-14-04
+    # tbd: /usr/share/debconf/fix_db.pl
+    apt-get upgrade -y -qq
+    _install perl-doc perltidy
 
     # setup a pseudo account for myself
     # - in the VM I can pick up my custom envirornment via: su - ppearl

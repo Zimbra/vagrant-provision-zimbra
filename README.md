@@ -24,6 +24,7 @@ Usage: vsetup-ubuntu.sh <[-b][-d][-r]>
 Copy this example Vagrantfile to the name 'Vagrantfile' in the location of the VM to be provisioned.  Set the variables as appropriate for your environment:
 
 ```
+VMBOX = "ubuntu/trusty64" # ref: https://atlas.hashicorp.com/boxes/search
 HOSTNAME = "zpc"          # name of VM, convenient to use same name as p4 client
 SRCDIR = "/site"          # map source directory into the VM
 HOMEDIR = "/home/ppearl"  # map my home into the VM
@@ -35,11 +36,27 @@ PPATH =
   "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup-ubuntu.sh"
 PARGS = ["-d"]
 ```
+Potential issues:
+1. virtualbox can have issues with mmap on filesystems mapped into the VM
+  - ref: https://www.virtualbox.org/ticket/819
+  - workaround (use NFS and be sure your firewall setup allows NFS):
+    `config.vm.synced_folder SRCDIR, SRCDIR, type: "nfs"`
+2. nfs[1] with private_network[2] and dhcp conflicting host adapter[3]
+  1. http://docs.vagrantup.com/v2/synced-folders/nfs.html
+    - enable use of nfs in Vagrantfile
+      `config.vm.network "private_network", type: "dhcp"`
+  2. http://docs.vagrantup.com/v2/networking/private_network.html
+  3. https://github.com/mitchellh/vagrant/issues/3083 workaround:
+    - disable the virtualbox dhcpserver if you hit this problem
+     `VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0`
 
-Then start up the VM:
+Then start up the VM, ssh into it (possibly with port forwarding), stop it, and destroy it (if you're done with it!):
 
 ```console
 $ vagrant up ubuntu/trusty64 --provider virtualbox
+$ vagrant ssh     # -- -R 1066:127.1.1.1:1066 -R 1443:127.1.1.1:1443
+$ vagrant halt
+$ vagrant destroy # irreversible!
 ```
 
 * [vsetup-ubuntu.custom.sh](vsetup-ubuntu.custom.sh)
