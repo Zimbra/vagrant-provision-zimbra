@@ -36,23 +36,24 @@ PPATH =
   "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup-ubuntu.sh"
 PARGS = ["-d"]
 ```
-Potential issues:
 
-1. virtualbox can have issues with mmap on filesystems mapped into the VM
+### Potential issues:
+
+* virtualbox can have issues with mmap on filesystems mapped into the VM
   - ref: https://www.virtualbox.org/ticket/819
   - workaround (use NFS and be sure your firewall setup allows NFS):
 ```
     config.vm.synced_folder SRCDIR, SRCDIR, type: "nfs"
 ```
 
-2. nfs[1] with private_network[2] and dhcp conflicting host adapter[3]
-  1. http://docs.vagrantup.com/v2/synced-folders/nfs.html
+* nfs with private_network and dhcp conflicting host adapter
+  - http://docs.vagrantup.com/v2/synced-folders/nfs.html
     - enable use of nfs in Vagrantfile
 ```
     config.vm.network "private_network", type: "dhcp"
 ```
-  2. http://docs.vagrantup.com/v2/networking/private_network.html
-  3. https://github.com/mitchellh/vagrant/issues/3083 workaround:
+  - http://docs.vagrantup.com/v2/networking/private_network.html
+  - https://github.com/mitchellh/vagrant/issues/3083 workaround:
     - disable the virtualbox dhcpserver if you hit this problem
 ```
     VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0
