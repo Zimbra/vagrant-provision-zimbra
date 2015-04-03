@@ -67,13 +67,13 @@ main()
 # build+dev+run
 env_all_pre()
 {
-    echo "checking: $ZIMBRA_HOME"
+    echo "checking: $ZIMBRA_HOME exists (may need to be writable for old builds)"
     if [ -n "$ZIMBRA_HOME" ]; then
         if [ ! -d "$ZIMBRA_HOME" ]; then
-            echo "mkdir $ZIMBRA_HOME" && mkdir -p "$ZIMBRA_HOME"
+            echo "mkdir -p '$ZIMBRA_HOME'" && mkdir -p "$ZIMBRA_HOME"
             # perms of 1777 are debatable...
             if [ -n "$devenv" -o -n "$buildenv" ]; then
-                echo "chmod 1777 $ZIMBRA_HOME" && chmod 1777 "$ZIMBRA_HOME"
+                echo "chmod 1777 '$ZIMBRA_HOME'" && chmod 1777 "$ZIMBRA_HOME"
             fi
         fi
     fi
@@ -119,10 +119,10 @@ _install()
 _add_repo()
 {
     for rep in "$@"; do
-        echo "Adding repository $rep..."
+        echo "Adding repository '$rep' ..."
         add-apt-repository -y "$rep"
     done
-    echo "Running apt-get update..."
+    echo "Running apt-get update -qq ..."
     apt-get update -qq
 }
 
@@ -144,8 +144,7 @@ _install_buildtools()
     # need jdk 1.7 to build openjdk
     _install_java 7
 
-    # fpm - https://github.com/jordansissel/fpm
-    _install ruby-dev; gem install fpm
+    _install_fpm
 
     _install \
       make cmake gcc g++ patch automake autoconf bison flex bzip2 libtool unzip perl wget
@@ -153,8 +152,6 @@ _install_buildtools()
     _install \
       libz-dev libncurses-dev libexpat-dev libpopt-dev libpcre3-dev \
       libreadline-dev libbz2-dev libaio-dev cloog-ppl libperl-dev
-
-    _install dh-make build-essential devscripts fakeroot debootstrap pbuilder
 }
 
 _install_ant_maven()
@@ -164,10 +161,45 @@ _install_ant_maven()
     _install ant maven3
 }
 
+# fpm 1.3.3 bug workaround
+_fpm_133_workaround()
+{
+    fv=`fpm --version 2>/dev/null`
+    [ "$fv" = "1.3.3" ] || return
+
+    f="dir.rb"
+    dfix="https://raw.githubusercontent.com/jordansissel/fpm/master/lib/fpm/package/$f"
+    dest="/var/lib/gems/1.9.1/gems/fpm-1.3.3/lib/fpm/package"
+
+    echo "workaround fpm $fv bug #808/#823 in '$dest/$f'"
+    if [ ! -d "$dest" -o ! -r "$dest/$f" ]; then
+        echo "file to replace: '$dest/$f' does not exist"
+        return
+    fi
+
+    (
+        cd "$dest" \
+        && cp -p "$f" "${f}.ORIG" \
+        && wget -nv -O "${f}.NEW" "$dfix" \
+        && cp "${f}.NEW" "${f}"
+    ) \
+    && echo "replaced '$dest/$f' with '$dfix'" \
+    || echo "ERROR: replace '$dest/$f' with '$dfix' FAILED" 1>&2
+}
+
+# fpm - https://github.com/jordansissel/fpm
+_install_fpm()
+{
+    _install ruby-dev
+    gem install fpm && _fpm_133_workaround
+
+    _install build-essential # dh-make devscripts fakeroot debootstrap pbuilder
+}
+
 # known versions: 7 8
 _install_java()
 {
-    _add_repo ppa:webupd8team/java 
+    _add_repo ppa:webupd8team/java
     for v in "$@"; do
         debconf-set-selections <<< "oracle-java${v}-installer shared/accepted-oracle-license-v1-1 select true"
         # hide the wget progress output
@@ -187,12 +219,12 @@ _install_consul()
     loc="/usr/local/bin"
     bin="$loc""/consul"
     if [ -x "$bin" ]; then
-        echo "Consul: '$bin' already installed" 
+        echo "consul: '$bin' already installed"
         return
     else
       ( #  do the work in a subshell since we're CD'ing
         cd "$loc" && wget -nv "$url" && unzip "$zip" && rm "$zip" && chmod 755 "$bin"
-        [ ! -x "$bin" ] && echo "Consul: '$bin' install failed!"
+        [ ! -x "$bin" ] && echo "consul: '$bin' install failed!"
       )
     fi
 }
@@ -213,7 +245,7 @@ _mariadb_setup()
     )
     (
         fdir="/var/lib/mysql"; ddir="/opt/zimbra/mysql/data"
-	if [ -d "$ddir" ]; then
+        if [ -d "$ddir" ]; then
             echo "Directory '$ddir' already exists!"
         else
             echo "Copying data from '$fdir' to '$ddir'"
