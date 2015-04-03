@@ -141,17 +141,17 @@ _install_zdevtools()
 # build environment
 _install_buildtools()
 {
-    # need jdk 1.7 to build openjdk
-    _install_java 7
-
-    _install_fpm
-
     _install \
       make cmake gcc g++ patch automake autoconf bison flex bzip2 libtool unzip perl wget
 
     _install \
       libz-dev libncurses-dev libexpat-dev libpopt-dev libpcre3-dev \
       libreadline-dev libbz2-dev libaio-dev cloog-ppl libperl-dev
+
+    # need jdk 1.7 to build openjdk
+    _install_java 7
+
+    _install_fpm
 }
 
 _install_ant_maven()
