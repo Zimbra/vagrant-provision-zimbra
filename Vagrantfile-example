@@ -2,10 +2,10 @@
 # ref: https://atlas.hashicorp.com/boxes/search
 #VMBOX = "frensjan/centos-7-64-lxc"
 VMBOX = "ubuntu/trusty64"
-MYUSER = "ppearl"
+MYUSER = "ppearl"           # used to map my home into the VM
 HOSTNAME = "zpc"            # name of VM, convenient to use same name as p4 client
 SRCDIR = "/site"            # map my source directory into the VM
-HOMEDIR = "/home/" + MYUSER # map my home into the VM
+HOMEDIR = "/home/" + MYUSER
 
 # provisioning script and args
 #   PPATH = "./vsetup.sh"

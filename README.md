@@ -5,11 +5,11 @@ In order to use these, you'll need to have Vagrant [installed](https://www.vagra
 
 ## What's here...
 
-* [vsetup-ubuntu.sh](vsetup-ubuntu.sh)
+* [vsetup.sh](vsetup.sh)
 
-A vagrant provisioning script for ubuntu (known to work with 14.04 LTS):
+A vagrant provisioning script for centos7/ubuntu14:
 ```
-Usage: vsetup-ubuntu.sh <[-b][-d][-r]>
+Usage: vsetup.sh <[-b][-d][-r]>
   environment type (choose all desired zimbra related environments):
     -b  == build       ThirdParty FOSS (fpm,gcc,headers,libs,etc.)
     -d  == development Full ZCS builds (ant,java,maven,...)
@@ -24,16 +24,19 @@ Usage: vsetup-ubuntu.sh <[-b][-d][-r]>
 Copy this example Vagrantfile to the name 'Vagrantfile' in the location of the VM to be provisioned.  Set the variables as appropriate for your environment:
 
 ```
-VMBOX = "ubuntu/trusty64" # ref: https://atlas.hashicorp.com/boxes/search
-HOSTNAME = "zpc"          # name of VM, convenient to use same name as p4 client
-SRCDIR = "/site"          # map source directory into the VM
-HOMEDIR = "/home/ppearl"  # map my home into the VM
+# ref: https://atlas.hashicorp.com/boxes/search
+#VMBOX = "frensjan/centos-7-64-lxc"
+VMBOX = "ubuntu/trusty64"
+MYUSER = "ppearl"           # can be used to map my home into the VM
+HOSTNAME = "zpc"            # name of VM, convenient to use same name as p4 client
+SRCDIR = "/site"            # map my source directory into the VM
+HOMEDIR = "/home/" + MYUSER
 
 # provisioning script and args
-#   PPATH = "./vsetup-ubuntu.sh"
+#   PPATH = "./vsetup.sh"
 #   PARGS = ...  # -b == build, -d == dev, -r == runtime
 PPATH =
-  "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup-ubuntu.sh"
+  "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup.sh"
 PARGS = ["-d"]
 ```
 
@@ -68,7 +71,7 @@ $ vagrant halt
 $ vagrant destroy # irreversible!
 ```
 
-* [vsetup-ubuntu.custom.sh](vsetup-ubuntu.custom.sh)
+* [vsetup.custom.sh](vsetup.custom.sh)
 
 An second (example) script that could also be called via the vagrant provisioning process to setup more custom environmental related settings.
 
@@ -85,7 +88,6 @@ In this file there are hints as to how to setup and use a tunnel between the VM 
 
 ## TODO
 
-- [ ] CentOS setup script(s)
 - [ ] Provide more info/links on getting started with Vagrant?
 
 ## License
