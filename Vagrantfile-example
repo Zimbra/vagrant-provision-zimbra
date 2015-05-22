@@ -1,14 +1,17 @@
 #
-VMBOX = "ubuntu/trusty64" # ref: https://atlas.hashicorp.com/boxes/search
-HOSTNAME = "zpc"          # name of VM, convenient to use same name as p4 client
-SRCDIR = "/site"          # map source directory into the VM
-HOMEDIR = "/home/ppearl"  # map my home into the VM
+# ref: https://atlas.hashicorp.com/boxes/search
+#VMBOX = "frensjan/centos-7-64-lxc"
+VMBOX = "ubuntu/trusty64"
+MYUSER = "ppearl"
+HOSTNAME = "zpc"            # name of VM, convenient to use same name as p4 client
+SRCDIR = "/site"            # map my source directory into the VM
+HOMEDIR = "/home/" + MYUSER # map my home into the VM
 
 # provisioning script and args
-#   PPATH = "./vsetup-ubuntu.sh"
+#   PPATH = "./vsetup.sh"
 #   PARGS = ...  # -b == build, -d == dev, -r == runtime
 PPATH =
-  "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup-ubuntu.sh"
+  "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup.sh"
 PARGS = ["-d"]
 
 VAGRANTFILE_API_VERSION = "2"
@@ -36,5 +39,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # 3. https://github.com/mitchellh/vagrant/issues/3083 workaround:
   #    VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0
   # config.vm.network "private_network", type: "dhcp"
+  # config.vm.provision "shell", inline: PPATH + " " + PARGS * " " + "; /vagrant/vsetup.custom.sh " + MYUSER
   config.vm.provision "shell", path: PPATH, args: PARGS
 end
