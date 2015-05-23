@@ -22,9 +22,9 @@ case $dist in
         ;;
 esac
 
-function echo () { builtin echo $(date --rfc-3339=s): $prog "$@"; }
+function say () { builtin echo $(date --rfc-3339=s): $prog "$@"; }
 
-function _install () { echo "Installing package(s): $@"; _install_$dist "$@"; }
+function _install () { say "Installing package(s): $@"; _install_$dist "$@"; }
 function _install_centos () { yum install -y -q "$@"; }
 function _install_ubuntu () { apt-get install -y -qq "$@"; }
 
@@ -45,7 +45,7 @@ _install_custom()
 
     # setup a pseudo account for myself
     # - in the VM I can pick up my custom envirornment via: su - ppearl
-    echo "Create entry for ppearl in /etc/passwd"
+    say "Create entry for ppearl in /etc/passwd"
     grep vagrant /etc/passwd | sed -e "s,vagrant,${myuser},g" | sudo tee -a /etc/passwd
 
     # custom tunnel for perforce and reviewboard
@@ -55,7 +55,7 @@ _install_custom()
     #   - .reviewboardrc has: REVIEWBOARD_URL="https://ztun:1443"
     #   - .p4config has:      P4PORT=ztun:1066
     entry="127.0.0.1 ztun" # reviewboard.eng...
-    echo "Adding entry to /etc/hosts: $entry"
+    say "Adding entry to /etc/hosts: $entry"
     echo "$entry" | tee -a /etc/hosts
 }
 

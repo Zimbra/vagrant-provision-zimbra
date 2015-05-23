@@ -24,17 +24,17 @@ case $dist in
     centos|ubuntu)
         ;;
     *)
-        echo "$prog does not support OS '$dist' yet"
+        say "$prog does not support OS '$dist' yet"
         exit 1
         ;;
 esac
 
-function echo () { builtin echo $(date --rfc-3339=s): $prog "$@"; }
+function say () { builtin echo $(date --rfc-3339=s): $prog "$@"; }
 
 function usage ()
 {
     for info in "$@"; do
-        echo "$info"
+        say "$info"
     done
     cat <<EOF
 Usage: $prog <[-b][-d][-r]>
@@ -51,9 +51,9 @@ EOF
 [[ "$#" -eq 0 ]] && usage "an argument is required" && exit 1
 while getopts "bdrh" opt; do
     case "$opt" in
-        b) buildenv=1; echo "selecting environment: build" ;;
-        d) devenv=1;   echo "selecting environment: development" ;;
-        r) runenv=1;   echo "selecting environment: runtime" ;;
+        b) buildenv=1; say "selecting environment: build" ;;
+        d) devenv=1;   say "selecting environment: development" ;;
+        r) runenv=1;   say "selecting environment: runtime" ;;
         h) usage && exit 0 ;;
         \?) errors=1 ;;
     esac
@@ -74,13 +74,13 @@ function main ()
 # build+dev+run
 function env_all_pre ()
 {
-    echo "checking: $ZIMBRA_HOME exists (may need to be writable for old builds)"
+    say "checking: $ZIMBRA_HOME exists (may need to be writable for old builds)"
     if [[ -n "$ZIMBRA_HOME" ]]; then
         if [[ ! -d "$ZIMBRA_HOME" ]]; then
-            echo "mkdir -p '$ZIMBRA_HOME'" && mkdir -p "$ZIMBRA_HOME"
+            say "mkdir -p '$ZIMBRA_HOME'" && mkdir -p "$ZIMBRA_HOME"
             # perms of 1777 are debatable...
             if [[ -n "$devenv" || -n "$buildenv" ]]; then
-                echo "chmod 1777 '$ZIMBRA_HOME'" && chmod 1777 "$ZIMBRA_HOME"
+                say "chmod 1777 '$ZIMBRA_HOME'" && chmod 1777 "$ZIMBRA_HOME"
             fi
         fi
     fi
@@ -90,7 +90,7 @@ function env_all_pre_ubuntu () { export DEBIAN_FRONTEND=noninteractive; }
 
 function env_all_post () { [[ "$dist" = "ubuntu" ]] && env_all_post_$dist; }
 function env_all_post_ubuntu () {
-    echo "Running dist-upgrade..."
+    say "Running dist-upgrade..."
     apt-get update -qq && apt-get dist-upgrade -y -qq
 }
 
@@ -114,17 +114,17 @@ function env_dev_run ()
 function env_build () { _install_buildtools; }
 
 ###
-function _install () { echo "Installing package(s): $@"; _install_$dist "$@"; }
+function _install () { say "Installing package(s): $@"; _install_$dist "$@"; }
 function _install_centos () { yum install -y -q "$@"; }
 function _install_ubuntu () { apt-get install -y -qq "$@"; }
 
 function _add_repo ()
 {
     for rep in "$@"; do
-        echo "Adding repository '$rep' ..."
+        say "Adding repository '$rep' ..."
         add-apt-repository -y "$rep"
     done
-    echo "Running apt-get update -qq ..."
+    say "Running apt-get update -qq ..."
     apt-get update -qq
 }
 
@@ -215,9 +215,9 @@ function _fpm_133_workaround ()
     dfix="https://raw.githubusercontent.com/jordansissel/fpm/00a00d1bf5ff68ae374265d69ce8e55de8e50514/lib/fpm/package/$f"
     dest=$(_fpm_gem_base_$dist)/gems/fpm-1.3.3/lib/fpm/package
 
-    echo "workaround fpm $fv bug #808/#823 in '$dest/$f'"
+    say "workaround fpm $fv bug #808/#823 in '$dest/$f'"
     if [[ ! -d "$dest" || ! -r "$dest/$f" ]]; then
-        echo "file to replace: '$dest/$f' does not exist"
+        say "file to replace: '$dest/$f' does not exist"
         return
     fi
 
@@ -227,8 +227,8 @@ function _fpm_133_workaround ()
         && wget -nv -O "${f}.NEW" "$dfix" \
         && cp "${f}.NEW" "${f}"
     ) \
-    && echo "replaced '$dest/$f' with '$dfix'" \
-    || echo "ERROR: replace '$dest/$f' with '$dfix' FAILED" 1>&2
+    && say "replaced '$dest/$f' with '$dfix'" \
+    || say "ERROR: replace '$dest/$f' with '$dfix' FAILED" 1>&2
 }
 
 # fpm - https://github.com/jordansissel/fpm
@@ -271,12 +271,12 @@ function _install_consul ()
     loc="/usr/local/bin"
     bin="$loc""/consul"
     if [[ -x "$bin" ]]; then
-        echo "consul: '$bin' already installed"
+        say "consul: '$bin' already installed"
         return
     else
       ( #  do the work in a subshell since we're CD'ing
         cd "$loc" && wget -nv "$url" && unzip "$zip" && rm "$zip" && chmod 755 "$bin"
-        [[ ! -x "$bin" ]] && echo "consul: '$bin' install failed!"
+        [[ ! -x "$bin" ]] && say "consul: '$bin' install failed!"
       )
     fi
 }
@@ -284,7 +284,7 @@ function _install_consul ()
 function _install_mariadb_server () { _install_mariadb_server_$dist; }
 function _install_mariadb_server_centos () {
     _install mariadb-server
-    echo "TODO: configure mariadb: set port=7306; sock=/opt/zimbra/mysql/data/mysqld.sock"
+    say "TODO: configure mariadb: set port=7306; sock=/opt/zimbra/mysql/data/mysqld.sock"
 }
 function _install_mariadb_server_ubuntu () {
     debconf-set-selections <<< "mysql-server mysql-server/root_password password $MYSQLPASS"
@@ -297,15 +297,15 @@ function _mariadb_setup ()
 {
     (
         pfrom=3306; pto=7306; file="/etc/mysql/my.cnf"
-        echo "Replacing '$pfrom' with '$pto' in '$file'"
+        say "Replacing '$pfrom' with '$pto' in '$file'"
         perl -pi -e "s,$pfrom,$pto,g" "$file"
     )
     (
         fdir="/var/lib/mysql"; ddir="/opt/zimbra/mysql/data"
         if [[ -d "$ddir" ]]; then
-            echo "Directory '$ddir' already exists!"
+            say "Directory '$ddir' already exists!"
         else
-            echo "Copying data from '$fdir' to '$ddir'"
+            say "Copying data from '$fdir' to '$ddir'"
             mkdir -p "$ddir" && cp -pr "$fdir"/* "$ddir"
             [[ -e "$ddir"/mysqld.sock ]] && rm "$ddir"/mysqld.sock
             ln -s "/var/run/mysqld/mysqld.sock" "$ddir"/mysqld.sock
