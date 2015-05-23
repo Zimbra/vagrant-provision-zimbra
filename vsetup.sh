@@ -24,7 +24,7 @@ case $dist in
     centos|ubuntu)
         ;;
     *)
-        say "$prog does not support OS '$dist' yet"
+        echo "$prog does not support OS '$dist' yet"
         exit 1
         ;;
 esac
