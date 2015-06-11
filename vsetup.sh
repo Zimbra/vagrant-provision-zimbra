@@ -9,6 +9,7 @@
 #   also check ZimbraServer/mvn.seed.properties (used by ant)
 #   see also the mvn-local-jars shell script to populate the local repository
 
+prog=${0##*/}
 MYSQLPASS="zimbra"
 P4CLIENTURL="http://cdist2.perforce.com/perforce/r15.1/bin.linux26x86_64/p4"
 ZIMBRA_HOME="/opt/zimbra"
@@ -18,7 +19,6 @@ dist=$(grep ^ID= /etc/os-release)
 dist=${dist#*=}
 dist=${dist#*\"}
 dist=${dist%*\"}
-prog=${0##*/}
 
 case $dist in
     centos|ubuntu)
