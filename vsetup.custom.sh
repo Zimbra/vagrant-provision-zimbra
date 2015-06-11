@@ -6,7 +6,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 # map this to the vagrant user but with a home of /home/$myuser
 myuser="$1"
-if [[ -n "$myuser" ]; then
+if [[ -n "$myuser" ]]; then
     if [[ "$myuser" =~ / ]]; then
        echo "$prog: invalid username '$myuser'"
        echo "usage: $prog [username]"
