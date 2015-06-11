@@ -62,11 +62,15 @@ shift $((OPTIND-1))
 [[ -n "$errors" ]] && usage "invalid arguments" && exit 3
 [[ "$#" -ne 0 ]] && usage "invalid argument: $1" && exit 3
 
+# order can be important:
+# - make needed to use fpm
+# - (any/some) java required by ant or maven
 function main ()
 {
     env_all_pre
-    [[ -n "$devenv" ]] && env_dev
+    [[ -n "$buildenv" || -n "$devenv" ]] && env_build_dev
     [[ -n "$devenv" || -n "$runenv" ]] && env_dev_run
+    [[ -n "$devenv" ]] && env_dev
     [[ -n "$buildenv" ]] && env_build
     env_all_post
 }
@@ -94,7 +98,7 @@ function env_all_post_ubuntu () {
     apt-get update -qq && apt-get dist-upgrade -y -qq
 }
 
-# dev
+# dev - ideally java is alrady installed before ant and maven
 function env_dev ()
 {
     _install_ant_maven
@@ -112,6 +116,7 @@ function env_dev_run ()
 
 # build - compilers, dev headers/libs, packaging, ...
 function env_build () { _install_buildtools; }
+function env_build_dev () { _install make; }
 
 ###
 function _install () { say "Installing package(s): $@"; _install_$dist "$@"; }
@@ -153,7 +158,7 @@ function _install_zdevtools ()
 function _install_buildtools ()
 {
     pkgs=(
-        make patch wget
+        patch wget
         bzip2 perl unzip # perl
         autoconf automake libtool # curl
         bison cmake # mariadb([lib]{aio,curses})
@@ -249,7 +254,18 @@ function _install_java_centos ()
         _install java-1.${v}.0-openjdk
     done
 }
-function _install_java_ubuntu ()
+function _install_java_ubuntu () { _install_java_ubuntu_openjdk "$@"; }
+function _install_java_ubuntu_openjdk ()
+{
+    _add_repo ppa:openjdk-r/ppa
+    for v in "$@"; do
+        _install openjdk-${v}-jdk
+        if [[ "$v" = "8" ]]; then
+            update-java-alternatives -s java-1.8.0-openjdk-amd64
+        fi
+    done
+}
+function _install_java_ubuntu_oracle ()
 {
     _add_repo ppa:webupd8team/java
     for v in "$@"; do

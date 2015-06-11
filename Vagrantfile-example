@@ -38,6 +38,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provider :virtualbox do |vb|
     vb.memory = "2048"
   end
+
+  # http://fgrehm.viewdocs.io/vagrant-cachier
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.scope = :box
+  end
+
   # refs: nfs[1] with private_network[2] and dhcp conflicting host adapter[3]
   # 1. http://docs.vagrantup.com/v2/synced-folders/nfs.html
   # 2. http://docs.vagrantup.com/v2/networking/private_network.html
