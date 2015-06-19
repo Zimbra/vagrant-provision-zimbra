@@ -149,8 +149,8 @@ function _install_zdevtools ()
 # - dependency notes:
 #   - apache/nginx: [lib]pcre-dev[el]
 #   - curl: libwww, [lib]z
-#   - heimdal: zlib
-#   - mariadb: [lib]aio, [lib]curses
+#   - heimdal: zlib [lib]ncurses
+#   - mariadb: [lib]aio, [lib]ncurses
 #   - tcmalloc: g++
 #   - perl: [lib]perl-dev[el]
 #   - rrdtool: perl-ExtUtils-MakeMaker
@@ -182,9 +182,10 @@ function _install_buildtools_centos ()
 function _install_buildtools_ubuntu ()
 {
     pkgs=(
-        g++
+        debhelper g++
         libwww-perl libz-dev libaio-dev libncurses-dev
         libexpat-dev libpcre3-dev libperl-dev
+        m4
     )
     _install "${pkgs[@]}"
     # TBD: flex libpopt-dev libreadline-dev libbz2-dev cloog-ppl
