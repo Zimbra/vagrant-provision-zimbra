@@ -163,6 +163,7 @@ function _install_buildtools ()
         autoconf automake libtool # curl
         bison cmake # mariadb([lib]{aio,curses})
         gcc tar # fpm(gcc,tar)
+        m4 # heimdal
     )
     _install "${pkgs[@]}"
     _install_buildtools_$dist
@@ -172,7 +173,7 @@ function _install_buildtools ()
 function _install_buildtools_centos ()
 {
     pkgs=(
-        gcc-c++
+        gcc-c++ pkgconfig
         perl-libwww-perl zlib-devel libaio-devel ncurses-devel
         expat-devel pcre-devel perl-devel perl-ExtUtils-MakeMaker
     )
@@ -182,10 +183,10 @@ function _install_buildtools_centos ()
 function _install_buildtools_ubuntu ()
 {
     pkgs=(
-        debhelper g++
+        debhelper
+        g++ pkg-config
         libwww-perl libz-dev libaio-dev libncurses-dev
         libexpat-dev libpcre3-dev libperl-dev
-        m4
     )
     _install "${pkgs[@]}"
     # TBD: flex libpopt-dev libreadline-dev libbz2-dev cloog-ppl
