@@ -88,9 +88,15 @@ function env_all_pre ()
             fi
         fi
     fi
-    [[ "$dist" = "ubuntu" ]] && env_all_pre_$dist
+    env_all_pre_$dist
 }
-function env_all_pre_ubuntu () { export DEBIAN_FRONTEND=noninteractive; }
+function env_all_pre_centos () {
+    say "Running yum makecache fast..."
+    yum makecache fast
+}
+function env_all_pre_ubuntu () {
+    export DEBIAN_FRONTEND=noninteractive
+}
 
 function env_all_post () { [[ "$dist" = "ubuntu" ]] && env_all_post_$dist; }
 function env_all_post_ubuntu () {
@@ -148,7 +154,7 @@ function _install_zdevtools ()
 # build environment
 # - dependency notes:
 #   - apache/nginx: [lib]pcre-dev[el]
-#   - curl: libwww, [lib]z
+#   - curl: {perl,}libwww-perl, [lib]z,
 #   - heimdal: zlib [lib]ncurses
 #   - mariadb: [lib]aio, [lib]ncurses
 #   - tcmalloc: g++

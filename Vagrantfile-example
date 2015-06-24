@@ -2,7 +2,9 @@
 # vi: set ft=ruby :
 #
 # ref: https://atlas.hashicorp.com/boxes/search
+#VMBOX = "fgrehm/precise64-lxc"
 #VMBOX = "fgrehm/trusty64-lxc"
+#VMBOX = "fgrehm/centos-6-64-lxc"
 #VMBOX = "frensjan/centos-7-64-lxc"
 VMBOX = "ubuntu/trusty64"
 MYUSER = "ppearl"           # used to map my home into the VM
@@ -10,10 +12,9 @@ HOSTNAME = "zpc"            # name of VM, convenient to use same name as p4 clie
 SRCDIR = "/site"            # map my source directory into the VM
 HOMEDIR = "/home/" + MYUSER
 
-# provisioning script and args
+# provisioning script and args # -b == build, -d == dev, -r == runtime
 #   PPATH = "/vagrant/vsetup.sh"
 #   PARGS = ["-b"]
-#   PARGS = ...  # -b == build, -d == dev, -r == runtime
 PPATH =
   "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup.sh"
 PARGS = ["-d"]
