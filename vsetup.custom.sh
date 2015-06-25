@@ -39,7 +39,11 @@ function main () { _install_custom; }
 
 # nice (for me) to have...
 function pkgs_centos () { echo "emacs-nox"; }
-function pkgs_ubuntu () { echo "emacs24-nox perl-doc"; }
+function pkgs_ubuntu () {
+    echo \
+      $(apt-cache depends emacs | awk '/Depends:/ && /nox/ {print $NF}') \
+      "perl-doc"
+}
 
 function _install_custom()
 {

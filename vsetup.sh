@@ -39,7 +39,7 @@ function usage ()
     cat <<EOF
 Usage: $prog <[-b][-d][-r]>
   environment type (choose all desired zimbra related environments):
-    -b  == build       ThirdParty FOSS (fpm,gcc,headers,libs,etc.)
+    -b  == build       ThirdParty FOSS (gcc,headers,libs,etc.)
     -d  == development Full ZCS builds (ant,java,maven,...)
     -r  == runtime     consul, mariadb, redis, memcached
 
@@ -63,7 +63,6 @@ shift $((OPTIND-1))
 [[ "$#" -ne 0 ]] && usage "invalid argument: $1" && exit 3
 
 # order can be important:
-# - make needed to use fpm
 # - (any/some) java required by ant or maven
 function main ()
 {
@@ -78,7 +77,7 @@ function main ()
 # build+dev+run
 function env_all_pre ()
 {
-    say "checking: $ZIMBRA_HOME exists (may need to be writable for old builds)"
+    say "checking if $ZIMBRA_HOME exists (and is writable for build|dev envs)"
     if [[ -n "$ZIMBRA_HOME" ]]; then
         if [[ ! -d "$ZIMBRA_HOME" ]]; then
             say "mkdir -p '$ZIMBRA_HOME'" && mkdir -p "$ZIMBRA_HOME"
@@ -96,6 +95,8 @@ function env_all_pre_centos () {
 }
 function env_all_pre_ubuntu () {
     export DEBIAN_FRONTEND=noninteractive
+    say "Running apt-get update -qq ..."
+    apt-get update -qq
 }
 
 function env_all_post () { [[ "$dist" = "ubuntu" ]] && env_all_post_$dist; }
@@ -168,12 +169,11 @@ function _install_buildtools ()
         bzip2 perl unzip # perl
         autoconf automake libtool # curl
         bison cmake # mariadb([lib]{aio,curses})
-        gcc tar # fpm(gcc,tar)
+        gcc tar
         m4 # heimdal
     )
     _install "${pkgs[@]}"
     _install_buildtools_$dist
-    _install_fpm
 }
 
 function _install_buildtools_centos ()
@@ -211,47 +211,6 @@ function _install_ant_maven_ubuntu ()
 {
     _add_repo ppa:andrei-pozolotin/maven3
     _install ant maven3
-}
-
-# fpm 1.3.3 bug workaround
-# centos /usr/local/share/gems/gems/fpm-1.3.3/lib/fpm/package
-# ubuntu /var/lib/gems/1.9.1/gems/fpm-1.3.3/lib/fpm/package
-function _fpm_gem_base_centos () { echo "/usr/local/share/gems"; }
-function _fpm_gem_base_ubuntu () { echo "/var/lib/gems/1.9.1"; }
-
-function _fpm_133_workaround ()
-{
-    fv=$(fpm --version 2>/dev/null)
-    [[ "$fv" = "1.3.3" ]] || return
-
-    f="dir.rb"
-    dfix="https://raw.githubusercontent.com/jordansissel/fpm/00a00d1bf5ff68ae374265d69ce8e55de8e50514/lib/fpm/package/$f"
-    dest=$(_fpm_gem_base_$dist)/gems/fpm-1.3.3/lib/fpm/package
-
-    say "workaround fpm $fv bug #808/#823 in '$dest/$f'"
-    if [[ ! -d "$dest" || ! -r "$dest/$f" ]]; then
-        say "file to replace: '$dest/$f' does not exist"
-        return
-    fi
-
-    (
-        cd "$dest" \
-        && cp -p "$f" "${f}.ORIG" \
-        && wget -nv -O "${f}.NEW" "$dfix" \
-        && cp "${f}.NEW" "${f}"
-    ) \
-    && say "replaced '$dest/$f' with '$dfix'" \
-    || say "ERROR: replace '$dest/$f' with '$dfix' FAILED" 1>&2
-}
-
-# fpm - https://github.com/jordansissel/fpm
-# - requires gcc but that is installed earlier...
-function pkg_fpmdeps_centos () { echo "ruby-devel rpm-build"; }
-function pkg_fpmdeps_ubuntu () { echo "ruby-dev build-essential"; }
-function _install_fpm ()
-{
-     _install $(pkg_fpmdeps_$dist)
-    gem install fpm && _fpm_133_workaround
 }
 
 # known versions: 7 8
