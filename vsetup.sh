@@ -20,7 +20,7 @@ dist=${dist#*=}
 dist=${dist#*\"}
 dist=${dist%*\"}
 
-case $dist in
+case "$dist" in
     centos|ubuntu)
         ;;
     *)
@@ -118,7 +118,8 @@ function env_dev_run ()
     _install_java 8
     _install curl netcat memcached redis-server
     _install_mariadb_server
-    _install_consul 0.5.0
+    _install_consul 0.5.2
+    _link_zimbra_common
 }
 
 # build - compilers, dev headers/libs, packaging, ...
@@ -179,6 +180,7 @@ function _install_buildtools ()
 function _install_buildtools_centos ()
 {
     pkgs=(
+        rpm-build
         gcc-c++ pkgconfig
         perl-libwww-perl zlib-devel libaio-devel ncurses-devel
         expat-devel pcre-devel perl-devel perl-ExtUtils-MakeMaker
@@ -243,6 +245,26 @@ function _install_java_ubuntu_oracle ()
     #OFF update-java-alternatives -s java-7-oracle
 }
 
+function _link_zimbra_common ()
+{
+    ddir="${ZIMBRA_HOME}/common/sbin"
+    if [[ -d "$ddir" ]]; then
+        say "Directory '$ddir' already exists!"
+    else
+      ( #  do the work in a subshell since we're CD'ing
+        mkdir -p "$ddir"
+        cd "$ddir" || exit
+        for bin in /usr/local/bin/consul $(which memcached) $(which redis-server)
+        do
+            if [[ -x "$bin" ]]; then
+                say "Make symlink to '$bin' in '$ddir'"
+                ln -s "$bin" "."
+            fi
+        done
+      )
+    fi
+}
+
 # consul
 # - download via http://www.consul.io/downloads.html
 #   /usr/local/bin/consul agent -server -bootstrap-expect 1 -data-dir /var/tmp/consul
@@ -267,7 +289,7 @@ function _install_consul ()
 function _install_mariadb_server () { _install_mariadb_server_$dist; }
 function _install_mariadb_server_centos () {
     _install mariadb-server
-    say "TODO: configure mariadb: set port=7306; sock=/opt/zimbra/mysql/data/mysqld.sock"
+    say "TODO: configure mariadb: set port=7306; sock=${ZIMBRA_HOME}/mysql/data/mysqld.sock"
 }
 function _install_mariadb_server_ubuntu () {
     debconf-set-selections <<< "mysql-server mysql-server/root_password password $MYSQLPASS"
@@ -278,13 +300,15 @@ function _install_mariadb_server_ubuntu () {
 
 function _mariadb_setup ()
 {
+    service mysql stop
+    myfile="/etc/mysql/my.cnf"
     (
-        pfrom=3306; pto=7306; file="/etc/mysql/my.cnf"
-        say "Replacing '$pfrom' with '$pto' in '$file'"
-        perl -pi -e "s,$pfrom,$pto,g" "$file"
+        pfrom=3306; pto=7306;
+        say "Replacing '$pfrom' with '$pto' in '$myfile'"
+        perl -pi -e "s,$pfrom,$pto,g" "$myfile"
     )
     (
-        fdir="/var/lib/mysql"; ddir="/opt/zimbra/mysql/data"
+        fdir="/var/lib/mysql"; ddir="${ZIMBRA_HOME}/mysql/data"
         if [[ -d "$ddir" ]]; then
             say "Directory '$ddir' already exists!"
         else
@@ -292,9 +316,11 @@ function _mariadb_setup ()
             mkdir -p "$ddir" && cp -pr "$fdir"/* "$ddir"
             [[ -e "$ddir"/mysqld.sock ]] && rm "$ddir"/mysqld.sock
             ln -s "/var/run/mysqld/mysqld.sock" "$ddir"/mysqld.sock
+            say "Replacing '$fdir' with '$ddir' in '$myfile'"
+            perl -pi -e "s,${fdir},${ddir},g if /^datadir/" "$myfile"
         fi
     )
-    service mysql restart
+    service mysql start
 }
 
 # call main
