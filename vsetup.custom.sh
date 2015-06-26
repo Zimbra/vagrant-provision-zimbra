@@ -15,7 +15,10 @@ if [[ -n "$myuser" ]]; then
 fi
 
 # ID="SomeThing" - remove up to equals sign and strip double quotes
-dist=$(grep ^ID= /etc/os-release)
+dist=$( \
+  grep ^ID= /etc/os-release 2>/dev/null \
+  || cut -d: -f 3 /etc/system-release-cpe 2>/dev/null \
+  )
 dist=${dist#*=}
 dist=${dist#*\"}
 dist=${dist%*\"}

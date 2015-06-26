@@ -15,7 +15,10 @@ P4CLIENTURL="http://cdist2.perforce.com/perforce/r15.1/bin.linux26x86_64/p4"
 ZIMBRA_HOME="/opt/zimbra"
 
 # ID="SomeThing" - remove up to equals sign and strip double quotes
-dist=$(grep ^ID= /etc/os-release)
+dist=$( \
+  grep ^ID= /etc/os-release 2>/dev/null \
+  || cut -d: -f 3 /etc/system-release-cpe 2>/dev/null \
+  )
 dist=${dist#*=}
 dist=${dist#*\"}
 dist=${dist%*\"}
@@ -313,7 +316,7 @@ function _mariadb_setup ()
             say "Directory '$ddir' already exists!"
         else
             say "Copying data from '$fdir' to '$ddir'"
-            mkdir -p "$ddir" && cp -pr "$fdir"/* "$ddir"
+            mkdir -p "$ddir" && cp -pr "$fdir"/* "$ddir" && chown mysql:mysql "$ddir"
             [[ -e "$ddir"/mysqld.sock ]] && rm "$ddir"/mysqld.sock
             ln -s "/var/run/mysqld/mysqld.sock" "$ddir"/mysqld.sock
             say "Replacing '$fdir' with '$ddir' in '$myfile'"
