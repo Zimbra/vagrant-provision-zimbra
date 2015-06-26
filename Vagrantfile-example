@@ -4,7 +4,7 @@
 # ref: https://atlas.hashicorp.com/boxes/search
 #VMBOX = "fgrehm/precise64-lxc"
 #VMBOX = "fgrehm/trusty64-lxc"
-#VMBOX = "fgrehm/centos-6-64-lxc"
+#VMBOX = "centos6"           # "fgrehm/centos-6-64-lxc" hangs, use docker...
 #VMBOX = "frensjan/centos-7-64-lxc"
 VMBOX = "ubuntu/trusty64"
 MYUSER = "ppearl"           # used to map my home into the VM
@@ -13,15 +13,17 @@ SRCDIR = "/site"            # map my source directory into the VM
 HOMEDIR = "/home/" + MYUSER
 
 # provisioning script and args # -b == build, -d == dev, -r == runtime
-#   PPATH = "/vagrant/vsetup.sh"
-#   PARGS = ["-b"]
+# PPATH = "/vagrant/vsetup.sh"
+# PARGS = ["-b"]
 PPATH =
   "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup.sh"
 PARGS = ["-d"]
 
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = VMBOX
+  unless VMBOX == "centos6"
+    config.vm.box = VMBOX   # do not set when using docker
+  end
   config.vm.host_name = HOSTNAME
   config.vm.synced_folder HOMEDIR, HOMEDIR
   #config.vm.synced_folder "/site", "/site"
@@ -33,15 +35,23 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.nfs.map_uid = Process.uid
   config.nfs.map_gid = Process.gid
 
+  config.vm.provider :docker do |docker|
+    docker.build_dir = VMBOX
+    docker.has_ssh = true
+    docker.name = HOSTNAME
+    #config.ssh.port = 22
+  end
+
   config.vm.provider :lxc do |lxc|
     lxc.customize "cgroup.memory.limit_in_bytes", "2048M"
   end
+
   config.vm.provider :virtualbox do |vb|
     vb.memory = "2048"
   end
 
   # http://fgrehm.viewdocs.io/vagrant-cachier
-  if Vagrant.has_plugin?("vagrant-cachier")
+  if config.vm.box.nil? && Vagrant.has_plugin?("vagrant-cachier")
     config.cache.scope = :box
   end
 
