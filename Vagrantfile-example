@@ -21,8 +21,13 @@ PARGS = ["-d"]
 
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  unless VMBOX == "centos6"
-    config.vm.box = VMBOX   # do not set when using docker
+  if VMBOX == "centos6"
+    config.vm.provider :docker do |docker|
+    docker.build_dir = VMBOX
+    docker.has_ssh = true
+    docker.name = HOSTNAME
+  else
+    config.vm.box = VMBOX
   end
   config.vm.host_name = HOSTNAME
   config.vm.synced_folder HOMEDIR, HOMEDIR
@@ -35,17 +40,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.nfs.map_uid = Process.uid
   config.nfs.map_gid = Process.gid
 
-  config.vm.provider :docker do |docker|
-    docker.build_dir = VMBOX
-    docker.has_ssh = true
-    docker.name = HOSTNAME
-    #config.ssh.port = 22
-  end
-
   config.vm.provider :lxc do |lxc|
     lxc.customize "cgroup.memory.limit_in_bytes", "2048M"
   end
-
   config.vm.provider :virtualbox do |vb|
     vb.memory = "2048"
   end
