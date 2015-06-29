@@ -34,7 +34,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # virtualbox: mmap broken on mapped filesystems
   # - ref: https://www.virtualbox.org/ticket/819
-  if SRCDIR?
+  if defined? SRCDIR
     config.vm.synced_folder SRCDIR, SRCDIR #, type: "nfs"
   end
   # map vagrant user/grp to me, not root
@@ -49,7 +49,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   # http://fgrehm.viewdocs.io/vagrant-cachier
-  if config.vm.box.nil? && Vagrant.has_plugin?("vagrant-cachier")
+  if config.vm.box.is_a?(String) && Vagrant.has_plugin?("vagrant-cachier")
     config.cache.scope = :box
   end
 
