@@ -51,12 +51,6 @@ function pkgs_ubuntu () {
 function _install_custom()
 {
     _install $(pkgs_$dist) hunspell perltidy
-
-    # workaround for /usr/share/doc/dictionaries-common/README.problems
-    # ref: http://stackoverflow.com/questions/23671727/error-with-sudo-apt-get-dictionnary-commons-since-update-to-ubuntu-14-04
-    # tbd: /usr/share/debconf/fix_db.pl
-    # apt-get upgrade -y -qq
-
     [[ -n "$myuser" ]] && _update_passwd "$myuser"
     [[ "$myuser" = "ppearl" ]] && _install_hook_${myuser}
 }
