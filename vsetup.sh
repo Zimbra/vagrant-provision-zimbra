@@ -80,13 +80,13 @@ function main ()
 # build+dev+run
 function env_all_pre ()
 {
-    say "checking if $ZIMBRA_HOME exists (and is writable for dev env)"
+    say "checking if $ZIMBRA_HOME exists"
     if [[ -n "$ZIMBRA_HOME" ]]; then
         if [[ ! -d "$ZIMBRA_HOME" ]]; then
             say "mkdir -p '$ZIMBRA_HOME'" && mkdir -p "$ZIMBRA_HOME"
             # perms of 1777 for development are debatable...
             if [[ -n "$devenv" ]]; then
-                say "chmod 1777 '$ZIMBRA_HOME'" && chmod 1777 "$ZIMBRA_HOME"
+                say "devenv: chmod 1777 '$ZIMBRA_HOME'" && chmod 1777 "$ZIMBRA_HOME"
             fi
         fi
     fi
