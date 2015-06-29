@@ -23,9 +23,10 @@ VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   if VMBOX == "centos6"
     config.vm.provider :docker do |docker|
-    docker.build_dir = VMBOX
-    docker.has_ssh = true
-    docker.name = HOSTNAME
+      docker.build_dir = VMBOX
+      docker.has_ssh = true
+      docker.name = HOSTNAME
+    end
   else
     config.vm.box = VMBOX
   end
