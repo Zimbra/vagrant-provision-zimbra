@@ -9,15 +9,14 @@
 VMBOX = "ubuntu/trusty64"
 MYUSER = "ppearl"           # used to map my home into the VM
 HOSTNAME = "zcsdev"         # name of VM
-SRCDIR = "/site"            # map my source directory into the VM
+#SRCDIR = "/site"            # map my source directory into the VM
 HOMEDIR = "/home/" + MYUSER
 
 # provisioning script and args # -b == build, -d == dev, -r == runtime
+PPATH = "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup.sh"
+PARGS = ["-d"]
 # PPATH = "/vagrant/vsetup.sh"
 # PARGS = ["-b"]
-PPATH =
-  "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup.sh"
-PARGS = ["-d"]
 
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
@@ -32,11 +31,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
   config.vm.host_name = HOSTNAME
   config.vm.synced_folder HOMEDIR, HOMEDIR
-  #config.vm.synced_folder "/site", "/site"
 
   # virtualbox: mmap broken on mapped filesystems
   # - ref: https://www.virtualbox.org/ticket/819
-  config.vm.synced_folder SRCDIR, SRCDIR #, type: "nfs"
+  if SRCDIR?
+    config.vm.synced_folder SRCDIR, SRCDIR #, type: "nfs"
+  end
   # map vagrant user/grp to me, not root
   config.nfs.map_uid = Process.uid
   config.nfs.map_gid = Process.gid
