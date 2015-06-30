@@ -4,7 +4,7 @@
 FROM centos:centos6
 MAINTAINER Phil Pearl <ppearl@zimbra.com>
 
-COPY vagrantize.sh /tmp/vagrantize.sh
+COPY vagrantize.sh /tmp/
 RUN bash /tmp/vagrantize.sh
 
 EXPOSE 22
