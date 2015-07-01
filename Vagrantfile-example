@@ -3,6 +3,10 @@
 
 def load_conf(cfile)
   conf = Hash.new
+  if File.exists?("VMBOX")
+    print "loading VMBOX...\n" if ENV["DEBUG"]
+    conf["VMBOX"] = IO.read("VMBOX").gsub(/\s+/,"")
+  end
   if File.exists?(cfile)
     print "loading ", cfile, "...\n" if ENV["DEBUG"]
     File.open(cfile).each_line do |line|
@@ -29,7 +33,7 @@ end
 #   MYUSER, HOMEDIR, SRCDIR
 conf = load_conf("Vagrantfile.conf")
 
-conf["VMBOX"]    || abort("error: VMBOX is not set, check Vagrantfile.conf")
+conf["VMBOX"]    || abort("error: VMBOX not set, check VMBOX|Vagrantfile.conf file(s)")
 conf["HOMEDIR"]  ||= "/home/" + conf["MYUSER"] if conf["MYUSER"]
 conf["HOSTNAME"] ||= File.basename(File.dirname(File.absolute_path(__FILE__)))
 conf["PROVARGS"] ||= /(?:d|dev)(\.|$)/.match(conf["HOSTNAME"]) ? ["-d"] : ["-b"]
