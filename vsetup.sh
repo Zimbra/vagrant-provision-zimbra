@@ -75,6 +75,7 @@ function main ()
     [[ -n "$devenv" ]] && env_dev
     [[ -n "$buildenv" ]] && env_build
     env_all_post
+    exit 0
 }
 
 # build+dev+run
