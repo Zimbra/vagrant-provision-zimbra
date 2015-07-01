@@ -97,6 +97,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.provision "ppath", type: "shell", path: conf["PROVPATH"], args: conf["PROVARGS"]
   end
   if conf["PROVCUSTOM"]
-    config.vm.provision "pcustom", type: "shell", inline: conf["PROVCUSTOM"]
+    config.vm.provision "shell", inline: conf["PROVCUSTOM"]
   end
 end
