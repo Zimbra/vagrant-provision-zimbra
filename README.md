@@ -3,11 +3,13 @@
 
 In order to use these, you'll need to have Vagrant [installed](https://www.vagrantup.com/downloads.html) and [get familiar](https://docs.vagrantup.com/v2/) with how to use it.
 
+To build packages for centos6 we use a docker container, see their website for [installation procedures](https://docs.docker.com/installation/).
+
 ## What's here...
 
 * [vsetup.sh](vsetup.sh)
 
-A vagrant provisioning script for centos7/ubuntu14:
+A vagrant provisioning script for centos{6,7}/ubuntu{12,14}:
 ```
 Usage: vsetup.sh <[-b][-d][-r]>
   environment type (choose all desired zimbra related environments):
@@ -19,25 +21,35 @@ Usage: vsetup.sh <[-b][-d][-r]>
         building the components from ThirdParty)
 ```
 
-* [Vagrantfile-example](Vagrantfile-example)
+* [Vagrantfile](Vagrantfile) and [Vagrantfile.conf](Vagrantfile.conf)
 
-Copy this example Vagrantfile to the name 'Vagrantfile' in the location of the VM to be provisioned.  Set the variables as appropriate for your environment:
+The provided Vagrantfile.conf provides access to most settings you might want to play with for the VM to be provisioned.  Set the variables as appropriate for your environment:
 
 ```
-# ref: https://atlas.hashicorp.com/boxes/search
-#VMBOX = "frensjan/centos-7-64-lxc"
-VMBOX = "ubuntu/trusty64"
-MYUSER = "ppearl"           # can be used to map my home into the VM
-HOSTNAME = "zpc"            # name of VM, convenient to use same name as p4 client
-SRCDIR = "/site"            # map my source directory into the VM
-HOMEDIR = "/home/" + MYUSER
+# Notes:
+# - HOSTNAME defaults to current directory name if not specified
+# - PROVARGS defaults to "-b" unless HOSTNAME ends in d or dev ("-d")
+#   -b == build, -d == dev, -r == runtime
+# Additional optional config items:
+#   MYUSER, HOMEDIR, SRCDIR
 
-# provisioning script and args
-#   PPATH = "./vsetup.sh"
-#   PARGS = ...  # -b == build, -d == dev, -r == runtime
-PPATH =
-  "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup.sh"
-PARGS = ["-d"]
+#HOSTNAME = somename    # defaults to basename of $PWD
+#MYUSER = ppearl        # used to map my home into the VM
+#SRCDIR = "/site"       # map my source directory into the VM
+
+# provisioning script and args # -b == build, -d == dev, -r == runtime
+# - set PROVARGS based on hostname (-d if name ends in d or dev)
+#PROVARGS =                                    # config.vm.provision "args:"
+#PROVPATH   = vsetup.sh                        # config.vm.provision "path:"
+#PROVCUSTOM = /vagrant/vsetup.custom.sh        # config.vm.provision "inline:"
+
+# Note: optionally put the value for VMBOX in a file named VMBOX
+# - boxes ref: https://atlas.hashicorp.com/boxes/search
+#VMBOX = "fgrehm/precise64-lxc"
+#VMBOX = "fgrehm/trusty64-lxc"
+#VMBOX = "centos6"           # "fgrehm/centos-6-64-lxc" hangs, use docker...
+#VMBOX = "frensjan/centos-7-64-lxc"
+#VMBOX = "ubuntu/trusty64"
 ```
 
 ### Potential issues:
@@ -65,7 +77,7 @@ PARGS = ["-d"]
 Then start up the VM, ssh into it (possibly with port forwarding), stop it, and destroy it (if you're done with it!):
 
 ```console
-$ vagrant up ubuntu/trusty64 --provider virtualbox
+$ vagrant up --provider virtualbox
 $ vagrant ssh     # -- -R 1066:127.1.1.1:1066 -R 1443:127.1.1.1:1443
 $ vagrant halt
 $ vagrant destroy # irreversible!
@@ -73,7 +85,11 @@ $ vagrant destroy # irreversible!
 
 * [vsetup.custom.sh](vsetup.custom.sh)
 
-An second (example) script that could also be called via the vagrant provisioning process to setup more custom environmental related settings.
+An second (example) script that could also be called via the vagrant provisioning process to setup more custom environmental related settings.  Before using something like this, consider setting PROVCUSTOM in Vagrantfile.conf to do the setup you require.  For example
+
+```
+PROVCUSTOM = groupadd -g 1001 automation; useradd -M -u 1001 -g automation -s /bin/bash robot1
+```
 
 In this file there are hints as to how to setup and use a tunnel between the VM and the host/laptop where you are running vagrant from.  With the right environment setup is possible to get p4 and reviewboard to work easily with code that is being shared between your host/laptop and the VM.
 
