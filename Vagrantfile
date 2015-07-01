@@ -93,8 +93,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # 3. https://github.com/mitchellh/vagrant/issues/3083 workaround:
   #    VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0
   # config.vm.network "private_network", type: "dhcp"
-  config.vm.provision "shell", path: conf["PROVPATH"], args: conf["PROVARGS"]
+  if conf["PROVPATH"]
+    config.vm.provision "ppath", type: "shell", path: conf["PROVPATH"], args: conf["PROVARGS"]
+  end
   if conf["PROVCUSTOM"]
-    config.vm.provision "shell", inline: conf["PROVCUSTOM"]
+    config.vm.provision "pcustom", type: "shell", inline: conf["PROVCUSTOM"]
   end
 end
