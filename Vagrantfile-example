@@ -1,41 +1,71 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-#
-# ref: https://atlas.hashicorp.com/boxes/search
-#VMBOX = "fgrehm/precise64-lxc"
-#VMBOX = "fgrehm/trusty64-lxc"
-#VMBOX = "centos6"           # "fgrehm/centos-6-64-lxc" hangs, use docker...
-#VMBOX = "frensjan/centos-7-64-lxc"
-VMBOX = "ubuntu/trusty64"
-MYUSER = "ppearl"           # used to map my home into the VM
-HOSTNAME = "zcsdev"         # name of VM
-#SRCDIR = "/site"            # map my source directory into the VM
-HOMEDIR = "/home/" + MYUSER
 
-# provisioning script and args # -b == build, -d == dev, -r == runtime
-PPATH = "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup.sh"
-PARGS = ["-d"]
-# PPATH = "/vagrant/vsetup.sh"
-# PARGS = ["-b"]
+def load_conf(cfile)
+  conf = Hash.new
+  if File.exists?(cfile)
+    print "loading ", cfile, "...\n" if ENV["DEBUG"]
+    File.open(cfile).each_line do |line|
+      next if /^\s*(?:#|$)/.match(line)
+      key, val = line.strip.split(/\s*=\s*/, 2)
+      if /^'([^']*)'/.match(val) || /^"([^"]*)"/.match(val)
+        val = $1
+      elsif /^([^#]*)/.match(val)
+        val = $1.strip
+      end
+      val = val.split(/\s+/) if /^PROVARGS$/.match(key)
+      conf[key] = val
+    end
+  end
+  return conf
+end
+
+# Notes:
+# - boxes ref: https://atlas.hashicorp.com/boxes/search
+# - set HOSTNAME based on config or current directory name
+# - set PROVARGS based on HOSTNAME ("-d" if name ends in d or dev)
+#   -b == build, -d == dev, -r == runtime
+# Additional optional config items:
+#   MYUSER, HOMEDIR, SRCDIR
+conf = load_conf("Vagrantfile.conf")
+
+conf["VMBOX"]    || abort("error: VMBOX is not set, check Vagrantfile.conf")
+conf["HOMEDIR"]  ||= "/home/" + conf["MYUSER"] if conf["MYUSER"]
+conf["HOSTNAME"] ||= File.basename(File.dirname(File.absolute_path(__FILE__)))
+conf["PROVARGS"] ||= /(?:d|dev)(\.|$)/.match(conf["HOSTNAME"]) ? ["-d"] : ["-b"]
+conf["PROVPATH"] ||= "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup.sh"
+
+if /^(?:up|provision|ssh|status)/.match(ARGV[0])
+  print "HOSTNAME (VMBOX): ", conf["HOSTNAME"], " (", conf["VMBOX"], ")\n"
+  if /^(?:up|provision)/.match(ARGV[0])
+    print "Provision path (args): ", conf["PROVPATH"], " (", conf["PROVARGS"] * " ", ")\n"
+    if conf["SRCDIR"]
+      print "SRCDIR: ", (conf["SRCDIR"] || ""), "\n"
+    end
+  end
+end
+conf.sort.each { |k, v| print "DEBUG: conf: ", k, " => ", v, "\n" } if ENV["DEBUG"]
 
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  if VMBOX == "centos6"
+  if conf["VMBOX"] == "centos6"
     config.vm.provider :docker do |docker|
-      docker.build_dir = VMBOX
+      docker.build_dir = conf["VMBOX"]
       docker.has_ssh = true
-      docker.name = HOSTNAME
+      docker.name = conf["HOSTNAME"]
     end
   else
-    config.vm.box = VMBOX
+    config.vm.box = conf["VMBOX"]
   end
-  config.vm.host_name = HOSTNAME
-  config.vm.synced_folder HOMEDIR, HOMEDIR
+  config.vm.host_name = conf["HOSTNAME"]
+  if conf["HOMEDIR"]
+    config.vm.synced_folder conf["HOMEDIR"], conf["HOMEDIR"]
+  end
 
   # virtualbox: mmap broken on mapped filesystems
   # - ref: https://www.virtualbox.org/ticket/819
-  if defined? SRCDIR
-    config.vm.synced_folder SRCDIR, SRCDIR #, type: "nfs"
+  if conf["SRCDIR"]
+    config.vm.synced_folder conf["SRCDIR"], conf["SRCDIR"] #, type: "nfs"
   end
   # map vagrant user/grp to me, not root
   config.nfs.map_uid = Process.uid
@@ -59,6 +89,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # 3. https://github.com/mitchellh/vagrant/issues/3083 workaround:
   #    VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0
   # config.vm.network "private_network", type: "dhcp"
-  config.vm.provision "shell", path: PPATH, args: PARGS
-  # config.vm.provision "shell", inline: PPATH + " " + PARGS * " " + "; /vagrant/vsetup.custom.sh " + MYUSER
+  config.vm.provision "shell", path: conf["PROVPATH"], args: conf["PROVARGS"]
+  if conf["PROVCUSTOM"]
+    config.vm.provision "shell", inline: conf["PROVCUSTOM"]
+  end
 end
