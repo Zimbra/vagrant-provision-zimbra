@@ -3,17 +3,54 @@
 
 In order to use these, you'll need to have Vagrant [installed](https://www.vagrantup.com/downloads.html) and [get familiar](https://docs.vagrantup.com/v2/) with how to use it.
 
-To build packages for centos6 we use a docker container, see their website for [installation procedures](https://docs.docker.com/installation/).
+If you run into problems with the fgrehm/centos-6-64-lxc vagrant box, this supports the use of a [Docker](https://www.docker.com/) container with Vagrant (currently for centos6 only!), see the Docker website for [installation procedures](https://docs.docker.com/installation/).
 
-## What's here...
+## Quick Start
+
+### Getting a box up...
+
+If you have git, [Vagrant](https://www.vagrantup.com/) [VirtualBox](https://www.virtualbox.org/) installed, here's a relatively quick way (using vagrant-lxc is faster!) to get a box up...
+
+```
+$ mkdir -p ~/vagrant/u14test
+$ cd ~/vagrant/u14test/
+$ git clone https://github.com/plobbes/vagrant-provision-zimbra .
+Cloning into '.'...
+[snip]
+$ echo "ubuntu/trusty64" > VMBOX  # fgrehm/trusty64-lxc for vagrant-lxc
+$ vagrant up --provider virtualbox 2>&1 | tee -a up.$(basename $PWD)
+$ vagrant ssh
+```
+
+If you have [vagrant-lxc](https://github.com/fgrehm/vagrant-lxc) installed, you may want to one of the *-lxc vagrant boxes (VMBOX) listed below instead of using VirtualBox to avoid the VM overhead.  Also, if you frequently create/destroy VMs of the same type, consider using [vagrant-cachier](https://github.com/fgrehm/vagrant-cachier) to avoid having to redownload updated packages over and over again.
+
+Refs:
+* ubuntu/trusty64 - https://atlas.hashicorp.com/ubuntu/boxes/trusty64
+* vagrant cli - http://docs.vagrantup.com/v2/cli/
+
+### Working with Zimbra code
+
+The following wiki provides tips on working with Zimbra FOSS code:
+* https://wiki.zimbra.com/wiki/Building_Zimbra_using_Git
+
+If you're going to be doing ZCS development (PROVARGS = -d) under multiple VMs/Boxes, it might be worth while doing the git checkout in your home outside of the VM/box and then mapping that directory (via MYUSER and/or SRCDIR) into the VM by setting settings like these in Vagrantfile.conf:
+
+```
+#MYUSER = ppearl        # used to map /home/MYUSER into the VM
+#SRCDIR = "/site"       # map this source directory into the VM
+#PROVARGS = -d          # -b == build, -d == dev, -r == runtime
+```
+
+## Notes on what is here...
 
 * [vsetup.sh](vsetup.sh)
 
 A vagrant provisioning script for centos{6,7}/ubuntu{12,14}:
+
 ```
 Usage: vsetup.sh <[-b][-d][-r]>
   environment type (choose all desired zimbra related environments):
-    -b  == build       ThirdParty FOSS (fpm,gcc,headers,libs,etc.)
+    -b  == build       ThirdParty FOSS (gcc,headers,libs,etc.)
     -d  == development Full ZCS builds (ant,java,maven,...)
     -r  == runtime     consul, mariadb, redis, memcached
 
@@ -40,19 +77,28 @@ The provided Vagrantfile.conf provides access to most settings you might want to
 # provisioning script and args # -b == build, -d == dev, -r == runtime
 # - set PROVARGS based on hostname (-d if name ends in d or dev)
 #PROVARGS =                                    # config.vm.provision "args:"
-#PROVPATH   = vsetup.sh                        # config.vm.provision "path:"
+#PROVPATH = vsetup.sh                          # config.vm.provision "path:"
 #PROVCUSTOM = /vagrant/vsetup.custom.sh        # config.vm.provision "inline:"
 
 # Note: optionally put the value for VMBOX in a file named VMBOX
 # - boxes ref: https://atlas.hashicorp.com/boxes/search
 #VMBOX = "fgrehm/precise64-lxc"
 #VMBOX = "fgrehm/trusty64-lxc"
-#VMBOX = "centos6"           # "fgrehm/centos-6-64-lxc" hangs, use docker...
+#VMBOX = "centos6"                # via docker
+#VMBOX = "fgrehm/centos-6-64-lxc" # if this hangs, use docker...
 #VMBOX = "frensjan/centos-7-64-lxc"
 #VMBOX = "ubuntu/trusty64"
 ```
 
 ### Potential issues:
+
+* vagrant up with box "fgrehm/centos-6-64-lxc" fails (ssh timeout)
+  - ref: https://github.com/fgrehm/vagrant-lxc/issues/308
+  - workaround: use VMBOX=centos6 (with docker backend provider)
+```
+$ echo "centos6" > VMBOX
+$ vagrant up --provider docker
+```
 
 * virtualbox can have issues with mmap on filesystems mapped into the VM
   - ref: https://www.virtualbox.org/ticket/819
