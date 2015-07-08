@@ -43,10 +43,10 @@ function usage ()
 Usage: $prog <[-b][-d][-r]>
   environment type (choose all desired zimbra related environments):
     -b  == build       ThirdParty FOSS (gcc,headers,libs,etc.)
-    -d  == development Full ZCS builds (ant,java,maven,...)
-    -r  == runtime     consul, mariadb, redis, memcached
+    -d  == development Full ZCS builds (ant,java,maven,consul,mariadb,redis,memcached...)
+    -r  == runtime     Runtime for prebuilt ZCS
 
-  Note: runtime uses non-standard ZCS components (instead of
+  Note: development uses non-standard ZCS components (instead of
         building the components from ThirdParty)
 EOF
 }
@@ -71,7 +71,7 @@ function main ()
 {
     env_all_pre
     [[ -n "$buildenv" || -n "$devenv" ]] && env_build_dev
-    [[ -n "$devenv" || -n "$runenv" ]] && env_dev_run
+    [[ -n "$runenv" ]] && env_run
     [[ -n "$devenv" ]] && env_dev
     [[ -n "$buildenv" ]] && env_build
     env_all_post
@@ -112,18 +112,20 @@ function env_all_post_ubuntu () {
 # dev - ideally java is alrady installed before ant and maven
 function env_dev ()
 {
+    env_run
     _install_ant_maven
     _install_zdevtools # reviewboard
-}
-
-# dev+run
-function env_dev_run ()
-{
     _install_java 8
-    _install curl netcat memcached redis-server
+    _install memcached redis-server
     _install_mariadb_server
     _install_consul 0.5.2
     _link_zimbra_common
+}
+
+# run
+function env_run ()
+{
+    _install curl gzip libaio nc netcat sysstat tar wget
 }
 
 # build - compilers, dev headers/libs, packaging, ...
@@ -170,7 +172,7 @@ function _install_zdevtools ()
 function _install_buildtools ()
 {
     pkgs=(
-        patch wget
+        patch
         bzip2 perl unzip # perl
         autoconf automake libtool # curl
         bison cmake # mariadb([lib]{aio,curses})
@@ -258,7 +260,7 @@ function _link_zimbra_common ()
       ( #  do the work in a subshell since we're CD'ing
         mkdir -p "$ddir"
         cd "$ddir" || exit
-        for bin in /usr/local/bin/consul $(which memcached) $(which redis-server)
+        for bin in /usr/local/bin/consul $(type -p memcached) $(type -p redis-server)
         do
             if [[ -x "$bin" ]]; then
                 say "Make symlink to '$bin' in '$ddir'"
