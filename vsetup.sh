@@ -169,6 +169,8 @@ function _install_zdevtools ()
 #   - perl: [lib]perl-dev[el]
 #   - rrdtool: perl-ExtUtils-MakeMaker
 #   - unbound: [lib]expat-dev[el]
+#   - freetype: [lib]b[ip]z2-dev[el] (for rrdtool)
+#   - rsync/compress::bz...: [lib]popt-dev[el]
 function _install_buildtools ()
 {
     pkgs=(
@@ -190,6 +192,7 @@ function _install_buildtools_centos ()
         gcc-c++ pkgconfig
         perl-libwww-perl zlib-devel libaio-devel ncurses-devel
         expat-devel pcre-devel perl-devel perl-ExtUtils-MakeMaker
+        popt-devel bzip2-devel
     )
     _install "${pkgs[@]}"
 }
@@ -201,9 +204,10 @@ function _install_buildtools_ubuntu ()
         g++ pkg-config
         libwww-perl libz-dev libaio-dev libncurses-dev
         libexpat-dev libpcre3-dev libperl-dev
+        libpopt-dev libbz2-dev
     )
     _install "${pkgs[@]}"
-    # TBD: flex libpopt-dev libreadline-dev libbz2-dev cloog-ppl
+    # TBD: flex libreadline-dev cloog-ppl
 
     # need jdk 1.7 to build openjdk
     _install_java 7
