@@ -43,11 +43,14 @@ function usage ()
 Usage: $prog <[-b][-d][-r]>
   environment type (choose all desired zimbra related environments):
     -b  == build       ThirdParty FOSS (gcc,headers,libs,etc.)
-    -d  == development Full ZCS builds (ant,java,maven,consul,mariadb,redis,memcached...)
-    -r  == runtime     Runtime for prebuilt ZCS
+    -d  == development Full ZCS builds (consul,mariadb,redis,memcached...)
+    -r  == runtime     Runtime for ZCS (curl,gzip,libaio,netcat,sysstat,tar,wget)
 
-  Note: development uses non-standard ZCS components (instead of
-        building the components from ThirdParty)
+  Notes:
+   - build|dev installs: ant,java,make,maven
+   - development uses non-standard ZCS components (instead of building
+     the components from ThirdParty)
+
 EOF
 }
 
@@ -113,9 +116,7 @@ function env_all_post_ubuntu () {
 function env_dev ()
 {
     env_run
-    _install_ant_maven
     _install_zdevtools # reviewboard
-    _install_java 8
     _install memcached redis-server
     _install_mariadb_server
     _install_consul 0.5.2
@@ -125,12 +126,20 @@ function env_dev ()
 # run
 function env_run ()
 {
-    _install curl gzip libaio nc netcat sysstat tar wget
+    _install curl gzip sysstat tar wget
+    env_run_$dist
 }
+function env_run_centos () { _install libaio nc; }
+function env_run_ubuntu () { _install libaio1 netcat; }
 
 # build - compilers, dev headers/libs, packaging, ...
 function env_build () { _install_buildtools; }
-function env_build_dev () { _install make; }
+function env_build_dev ()
+{
+    _install make
+    _install_java 8 7    # need jdk 1.7 to build openjdk
+    _install_ant_maven
+}
 
 ###
 function _install () { say "Installing package(s): $@"; _install_$dist "$@"; }
@@ -208,9 +217,6 @@ function _install_buildtools_ubuntu ()
     )
     _install "${pkgs[@]}"
     # TBD: flex libreadline-dev cloog-ppl
-
-    # need jdk 1.7 to build openjdk
-    _install_java 7
 }
 
 # for java development
@@ -239,9 +245,7 @@ function _install_java_ubuntu_openjdk ()
     _add_repo ppa:openjdk-r/ppa
     for v in "$@"; do
         _install openjdk-${v}-jdk
-        if [[ "$v" = "8" ]]; then
-            update-java-alternatives -s java-1.8.0-openjdk-amd64
-        fi
+        update-java-alternatives -s java-1.${v}.0-openjdk-amd64
     done
 }
 function _install_java_ubuntu_oracle ()
