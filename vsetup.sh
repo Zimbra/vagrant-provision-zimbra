@@ -201,7 +201,7 @@ function _install_buildtools_centos ()
         gcc-c++ pkgconfig
         perl-libwww-perl zlib-devel libaio-devel ncurses-devel
         expat-devel pcre-devel perl-devel perl-ExtUtils-MakeMaker
-        popt-devel bzip2-devel
+        popt-devel bzip2-devel mercurial zip
     )
     _install "${pkgs[@]}"
 }
@@ -213,7 +213,7 @@ function _install_buildtools_ubuntu ()
         g++ pkg-config
         libwww-perl libz-dev libaio-dev libncurses-dev
         libexpat-dev libpcre3-dev libperl-dev
-        libpopt-dev libbz2-dev
+        libpopt-dev libbz2-dev mercurial zip
     )
     _install "${pkgs[@]}"
     # TBD: flex libreadline-dev cloog-ppl
