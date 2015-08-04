@@ -189,6 +189,7 @@ function _install_buildtools ()
         bison cmake # mariadb([lib]{aio,curses})
         gcc tar
         m4 # heimdal
+        mercurial zip # openjdk
     )
     _install "${pkgs[@]}"
     _install_buildtools_$dist
