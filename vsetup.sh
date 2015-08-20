@@ -116,6 +116,7 @@ function env_all_post_ubuntu () {
 function env_dev ()
 {
     env_run
+    _install_java 7 # JP dev requirement
     _install_zdevtools # reviewboard
     _install memcached redis-server
     _install_mariadb_server
@@ -133,11 +134,13 @@ function env_run_centos () { _install libaio nc; }
 function env_run_ubuntu () { _install libaio1 netcat; }
 
 # build - compilers, dev headers/libs, packaging, ...
+# - note: jdk 1.7 is needed to build openjdk 1.8 but for now we will
+#   handle that as part of that package's build process
 function env_build () { _install_buildtools; }
 function env_build_dev ()
 {
     _install make
-    _install_java 8 7    # need jdk 1.7 to build openjdk
+    _install_java 8
     _install_ant_maven
 }
 
@@ -189,6 +192,7 @@ function _install_buildtools ()
         bison cmake # mariadb([lib]{aio,curses})
         gcc tar
         m4 # heimdal
+        mercurial zip # openjdk
     )
     _install "${pkgs[@]}"
     _install_buildtools_$dist
