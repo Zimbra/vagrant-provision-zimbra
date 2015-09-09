@@ -205,7 +205,7 @@ function _install_buildtools_centos ()
         gcc-c++ pkgconfig
         perl-libwww-perl zlib-devel libaio-devel ncurses-devel
         expat-devel pcre-devel perl-devel perl-ExtUtils-MakeMaker
-        popt-devel bzip2-devel perl-Test-Simple
+        popt-devel bzip2-devel perl-Test-Simple perl-core
     )
     _install "${pkgs[@]}"
 }
