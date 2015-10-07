@@ -104,6 +104,7 @@ function env_all_pre_ubuntu () {
     export DEBIAN_FRONTEND=noninteractive
     say "Running apt-get update -qq ..."
     apt-get update -qq
+    apt-get install software-properties-common
 }
 
 function env_all_post () { [[ "$dist" = "ubuntu" ]] && env_all_post_$dist; }
