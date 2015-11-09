@@ -206,7 +206,7 @@ function _install_buildtools_centos ()
         perl-libwww-perl zlib-devel libaio-devel ncurses-devel
         expat-devel pcre-devel perl-devel perl-ExtUtils-MakeMaker
         popt-devel bzip2-devel perl-Test-Simple perl-core
-        perl-Socket6 perl-Test-Inter perl-Test-Warn
+        perl-Socket6 perl-Test-Inter perl-Test-Warn perl-Test-Deep
     )
     _install "${pkgs[@]}"
 }
@@ -220,6 +220,7 @@ function _install_buildtools_ubuntu ()
         libexpat-dev libpcre3-dev libperl-dev
         libpopt-dev libbz2-dev libtest-simple-perl
         libsocket6-perl libtest-inter-perl libtest-warn-perl
+        libtest-deep-perl
     )
     _install "${pkgs[@]}"
     # TBD: flex libreadline-dev cloog-ppl
