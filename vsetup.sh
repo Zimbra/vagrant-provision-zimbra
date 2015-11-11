@@ -193,6 +193,7 @@ function _install_buildtools ()
         gcc tar
         m4 # heimdal
         mercurial zip # openjdk
+        git # cluebringer
     )
     _install "${pkgs[@]}"
     _install_buildtools_$dist
