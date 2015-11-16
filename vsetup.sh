@@ -18,9 +18,9 @@ ZIMBRA_HOME="/opt/zimbra"
 dist=$( \
   grep ^ID= /etc/os-release 2>/dev/null \
   || cut -d: -f 3 /etc/system-release-cpe 2>/dev/null \
-  || grep ^DISTRIB_ID= /etc/lsb-release \
+  || grep ^DISTRIB_ID= /etc/lsb-release 2>/dev/null \
   )
-dist="$(tr [A-Z] [a-z] <<< "$dist")"
+dist=${dist,,}
 dist=${dist#*=}
 dist=${dist#*\"}
 dist=${dist%*\"}
