@@ -206,7 +206,7 @@ function _install_buildtools_centos ()
 {
     pkgs=(
         rpm-build
-        gcc-c++ pkgconfig
+        gcc-c++ pkgconfig libidn-devel
         perl-libwww-perl zlib-devel libaio-devel ncurses-devel
         expat-devel pcre-devel perl-devel perl-ExtUtils-MakeMaker
         popt-devel bzip2-devel perl-Test-Simple perl-core
@@ -219,7 +219,7 @@ function _install_buildtools_ubuntu ()
 {
     pkgs=(
         debhelper
-        g++ pkg-config
+        g++ pkg-config libidn11-dev
         libwww-perl libz-dev libaio-dev libncurses-dev
         libexpat-dev libpcre3-dev libperl-dev
         libpopt-dev libbz2-dev libtest-simple-perl
