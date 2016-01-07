@@ -86,15 +86,8 @@ function main ()
 # build+dev+run
 function env_all_pre ()
 {
-    say "checking if $ZIMBRA_HOME exists"
     if [[ -n "$ZIMBRA_HOME" ]]; then
-        if [[ ! -d "$ZIMBRA_HOME" ]]; then
-            say "mkdir -p '$ZIMBRA_HOME'" && mkdir -p "$ZIMBRA_HOME"
-            # perms of 1777 for development are debatable...
-            if [[ -n "$devenv" ]]; then
-                say "devenv: chmod 1777 '$ZIMBRA_HOME'" && chmod 1777 "$ZIMBRA_HOME"
-            fi
-        fi
+        _install_dirs "$ZIMBRA_HOME"
     fi
     env_all_pre_$dist
 }
@@ -125,6 +118,26 @@ function env_dev ()
     _install_mariadb_server
     _install_consul 0.5.2
     _link_zimbra_common
+
+    if [[ "$dist" = "ubuntu" ]]; then
+        say "Adding Zimbra repository ..."
+        _install apt-transport-https
+        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9BE6ED79
+        cat > /etc/apt/sources.list.d/zimbra.list <<EOF
+deb [arch=amd64] https://repo.zimbra.com/apt/87 $(lsb_release -cs) zimbra
+deb-src [arch=amd64] https://repo.zimbra.com/apt/87 $(lsb_release -cs) zimbra
+EOF
+        apt-get update -y -qq
+    fi
+
+    _install zimbra-openldap-server zimbra-openldap-client zimbra-rsync \
+             zimbra-openssl zimbra-openjdk zimbra-openjdk-cacerts \
+             zimbra-tcmalloc-lib
+
+    _install_dirs \
+        "$ZIMBRA_HOME/common/var" \
+        "$ZIMBRA_HOME/common/etc/openldap" \
+        "$ZIMBRA_HOME/common/etc/openldap/schema"
 }
 
 # run
@@ -148,7 +161,7 @@ function env_build_dev ()
 }
 
 ###
-function _install () { say "Installing package(s): $@"; _install_$dist "$@"; }
+function _install () { say "Installing packages: $@"; _install_$dist "$@"; }
 function _install_centos () { yum install -y -q "$@"; }
 function _install_ubuntu () { apt-get install -y -qq "$@"; }
 
@@ -172,6 +185,13 @@ function _install_zdevtools ()
 {
     _install_p4client
     _install python-setuptools && easy_install -U RBTools # reviewboard
+}
+
+function _install_dirs ()
+{
+    say "Creating directories: $*"
+    # 'vagrant' is a member of use sudo, as are developers likely to be
+    install -m a+rx,g+w -g sudo -d "$@"
 }
 
 # build environment
