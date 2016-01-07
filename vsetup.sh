@@ -104,15 +104,15 @@ function env_all_pre_centos () {
 }
 function env_all_pre_ubuntu () {
     export DEBIAN_FRONTEND=noninteractive
-    say "Running apt-get update -qq ..."
-    apt-get update -qq
-    apt-get install software-properties-common
+    say "Running apt-get update ..."
+    apt-get update -y -qq
+    apt-get install -y software-properties-common
 }
 
 function env_all_post () { [[ "$dist" = "ubuntu" ]] && env_all_post_$dist; }
 function env_all_post_ubuntu () {
-    say "Running dist-upgrade..."
-    apt-get update -qq && apt-get dist-upgrade -y -qq
+    say "Running apt-get dist-upgrade..."
+    apt-get update -y -qq && apt-get dist-upgrade -y -qq
 }
 
 # dev - ideally java is alrady installed before ant and maven
@@ -158,8 +158,8 @@ function _add_repo ()
         say "Adding repository '$rep' ..."
         add-apt-repository -y "$rep"
     done
-    say "Running apt-get update -qq ..."
-    apt-get update -qq
+    say "Running apt-get update ..."
+    apt-get update -y -qq
 }
 
 function _install_p4client ()
