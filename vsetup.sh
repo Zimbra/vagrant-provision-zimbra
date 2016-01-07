@@ -34,7 +34,7 @@ case "$dist" in
         ;;
 esac
 
-function say () { builtin echo $(date --rfc-3339=s): $prog "$@"; }
+function say () { builtin echo $(date --rfc-3339=s): "$@" 1>&2; }
 
 function usage ()
 {
