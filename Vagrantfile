@@ -77,6 +77,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provider :lxc do |lxc|
     lxc.customize "cgroup.memory.limit_in_bytes", "2048M"
+    lxc.customize "network.link", conf["VMBRIDGE"] if conf["VMBRIDGE"]
   end
   config.vm.provider :virtualbox do |vb|
     vb.memory = "2048"
@@ -87,12 +88,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.cache.scope = :box
   end
 
+  # this triggers a warning with lxc, but we work around that earlier
+  if conf["VMBRIDGE"]
+    config.vm.network "public_network", bridge: conf["VMBRIDGE"]
+  end
+
   # refs: nfs[1] with private_network[2] and dhcp conflicting host adapter[3]
   # 1. http://docs.vagrantup.com/v2/synced-folders/nfs.html
   # 2. http://docs.vagrantup.com/v2/networking/private_network.html
   # 3. https://github.com/mitchellh/vagrant/issues/3083 workaround:
   #    VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0
-  # config.vm.network "private_network", type: "dhcp"
   if conf["PROVPATH"]
     config.vm.provision "ppath", type: "shell", path: conf["PROVPATH"], args: conf["PROVARGS"]
   end
