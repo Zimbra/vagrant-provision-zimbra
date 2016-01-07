@@ -77,10 +77,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provider :lxc do |lxc|
     lxc.customize "cgroup.memory.limit_in_bytes", "2048M"
+    lxc.container_name = conf["VMNAME"] if conf["VMNAME"]
     lxc.customize "network.link", conf["VMBRIDGE"] if conf["VMBRIDGE"]
   end
   config.vm.provider :virtualbox do |vb|
     vb.memory = "2048"
+    vb.name = conf["VMNAME"] if conf["VMNAME"]
   end
 
   # http://fgrehm.viewdocs.io/vagrant-cachier
