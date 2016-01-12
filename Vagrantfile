@@ -79,7 +79,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.nfs.map_gid = Process.gid
 
   config.vm.provider :lxc do |lxc|
-    lxc.customize "cgroup.memory.limit_in_bytes", "" + "%dM" % conf["VMMEMORY"]
     lxc.container_name = conf["VMNAME"] if conf["VMNAME"]
     lxc.customize "network.link", conf["VMBRIDGE"] if conf["VMBRIDGE"]
   end
