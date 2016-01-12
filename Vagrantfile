@@ -36,7 +36,7 @@ conf = load_conf("Vagrantfile.conf")
 conf["VMBOX"]    || abort("error: VMBOX not set, check VMBOX|Vagrantfile.conf file(s)")
 conf["HOMEDIR"]  ||= "/home/" + conf["MYUSER"] if conf["MYUSER"]
 conf["HOSTNAME"] ||= File.basename(File.dirname(File.absolute_path(__FILE__)))
-conf["PROVARGS"] ||= /(?:d|dev)(\.|$)/.match(conf["HOSTNAME"]) ? ["-d"] : ["-b"]
+conf["PROVARGS"] ||= ["-d"]
 conf["PROVPATH"] ||= File.join(File.dirname(File.absolute_path(__FILE__)),
                                "vsetup.sh")
 
