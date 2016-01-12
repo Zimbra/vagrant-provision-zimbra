@@ -34,6 +34,8 @@ end
 conf = load_conf("Vagrantfile.conf")
 
 conf["VMBOX"]    || abort("error: VMBOX not set, check VMBOX|Vagrantfile.conf file(s)")
+conf["VMMEMORY"] ||= 4096
+conf["VMCPUS"]  ||= 2
 conf["HOMEDIR"]  ||= "/home/" + conf["MYUSER"] if conf["MYUSER"]
 conf["HOSTNAME"] ||= File.basename(File.dirname(File.absolute_path(__FILE__)))
 conf["PROVARGS"] ||= ["-d"]
@@ -77,13 +79,18 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.nfs.map_gid = Process.gid
 
   config.vm.provider :lxc do |lxc|
-    lxc.customize "cgroup.memory.limit_in_bytes", "2048M"
+    lxc.customize "cgroup.memory.limit_in_bytes", "" + "%dM" % conf["VMMEMORY"]
     lxc.container_name = conf["VMNAME"] if conf["VMNAME"]
     lxc.customize "network.link", conf["VMBRIDGE"] if conf["VMBRIDGE"]
   end
   config.vm.provider :virtualbox do |vb|
-    vb.memory = "2048"
+    vb.memory = conf["VMMEMORY"]
+    vb.cpus = conf["VMCPUS"]
     vb.name = conf["VMNAME"] if conf["VMNAME"]
+  end
+  config.vm.provider :libvirt do |vd|
+    vd.memory = conf["VMMEMORY"]
+    vd.cpus = conf["VMCPUS"]
   end
 
   # http://fgrehm.viewdocs.io/vagrant-cachier
