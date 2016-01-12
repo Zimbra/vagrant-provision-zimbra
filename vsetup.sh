@@ -188,7 +188,7 @@ function _install_p4client ()
 function _install_zdevtools ()
 {
     _install_p4client
-    _install python-setuptools && easy_install -U RBTools # reviewboard
+    _install python-pip && pip install -U RBTools # reviewboard
 }
 
 function _install_dirs ()
