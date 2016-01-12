@@ -37,7 +37,8 @@ conf["VMBOX"]    || abort("error: VMBOX not set, check VMBOX|Vagrantfile.conf fi
 conf["HOMEDIR"]  ||= "/home/" + conf["MYUSER"] if conf["MYUSER"]
 conf["HOSTNAME"] ||= File.basename(File.dirname(File.absolute_path(__FILE__)))
 conf["PROVARGS"] ||= /(?:d|dev)(\.|$)/.match(conf["HOSTNAME"]) ? ["-d"] : ["-b"]
-conf["PROVPATH"] ||= "https://raw.githubusercontent.com/plobbes/vagrant-provision-zimbra/master/vsetup.sh"
+conf["PROVPATH"] ||= File.join(File.dirname(File.absolute_path(__FILE__)),
+                               "vsetup.sh")
 
 if /^(?:up|provision|ssh|status)/.match(ARGV[0])
   print "HOSTNAME (VMBOX): ", conf["HOSTNAME"], " (", conf["VMBOX"], ")\n"
