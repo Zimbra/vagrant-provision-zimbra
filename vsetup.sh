@@ -34,7 +34,7 @@ case "$dist" in
         ;;
 esac
 
-function say () { builtin echo $(date --rfc-3339=s): $prog "$@"; }
+function say () { builtin echo $(date --rfc-3339=s): "$@" 1>&2; }
 
 function usage ()
 {
@@ -86,15 +86,8 @@ function main ()
 # build+dev+run
 function env_all_pre ()
 {
-    say "checking if $ZIMBRA_HOME exists"
     if [[ -n "$ZIMBRA_HOME" ]]; then
-        if [[ ! -d "$ZIMBRA_HOME" ]]; then
-            say "mkdir -p '$ZIMBRA_HOME'" && mkdir -p "$ZIMBRA_HOME"
-            # perms of 1777 for development are debatable...
-            if [[ -n "$devenv" ]]; then
-                say "devenv: chmod 1777 '$ZIMBRA_HOME'" && chmod 1777 "$ZIMBRA_HOME"
-            fi
-        fi
+        _install_dirs "$ZIMBRA_HOME"
     fi
     env_all_pre_$dist
 }
@@ -104,15 +97,15 @@ function env_all_pre_centos () {
 }
 function env_all_pre_ubuntu () {
     export DEBIAN_FRONTEND=noninteractive
-    say "Running apt-get update -qq ..."
-    apt-get update -qq
-    apt-get install software-properties-common
+    say "Running apt-get update ..."
+    apt-get update -y -qq
+    apt-get install -y software-properties-common
 }
 
 function env_all_post () { [[ "$dist" = "ubuntu" ]] && env_all_post_$dist; }
 function env_all_post_ubuntu () {
-    say "Running dist-upgrade..."
-    apt-get update -qq && apt-get dist-upgrade -y -qq
+    say "Running apt-get dist-upgrade..."
+    apt-get update -y -qq && apt-get dist-upgrade -y -qq
 }
 
 # dev - ideally java is alrady installed before ant and maven
@@ -125,6 +118,26 @@ function env_dev ()
     _install_mariadb_server
     _install_consul 0.5.2
     _link_zimbra_common
+
+    if [[ "$dist" = "ubuntu" ]]; then
+        say "Adding Zimbra repository ..."
+        _install apt-transport-https
+        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9BE6ED79
+        cat > /etc/apt/sources.list.d/zimbra.list <<EOF
+deb [arch=amd64] https://repo.zimbra.com/apt/87 $(lsb_release -cs) zimbra
+deb-src [arch=amd64] https://repo.zimbra.com/apt/87 $(lsb_release -cs) zimbra
+EOF
+        apt-get update -y -qq
+    fi
+
+    _install zimbra-openldap-server zimbra-openldap-client zimbra-rsync \
+             zimbra-openssl zimbra-openjdk zimbra-openjdk-cacerts \
+             zimbra-tcmalloc-lib
+
+    _install_dirs \
+        "$ZIMBRA_HOME/common/var" \
+        "$ZIMBRA_HOME/common/etc/openldap" \
+        "$ZIMBRA_HOME/common/etc/openldap/schema"
 }
 
 # run
@@ -148,7 +161,7 @@ function env_build_dev ()
 }
 
 ###
-function _install () { say "Installing package(s): $@"; _install_$dist "$@"; }
+function _install () { say "Installing packages: $@"; _install_$dist "$@"; }
 function _install_centos () { yum install -y -q "$@"; }
 function _install_ubuntu () { apt-get install -y -qq "$@"; }
 
@@ -158,8 +171,8 @@ function _add_repo ()
         say "Adding repository '$rep' ..."
         add-apt-repository -y "$rep"
     done
-    say "Running apt-get update -qq ..."
-    apt-get update -qq
+    say "Running apt-get update ..."
+    apt-get update -y -qq
 }
 
 function _install_p4client ()
@@ -172,6 +185,13 @@ function _install_zdevtools ()
 {
     _install_p4client
     _install python-setuptools && easy_install -U RBTools # reviewboard
+}
+
+function _install_dirs ()
+{
+    say "Creating directories: $*"
+    # 'vagrant' is a member of use sudo, as are developers likely to be
+    install -m a+rx,g+w -g sudo -d "$@"
 }
 
 # build environment
