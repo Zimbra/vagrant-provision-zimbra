@@ -36,7 +36,7 @@ conf = load_conf("Vagrantfile.conf")
 conf["VMBOX"]    || abort("error: VMBOX not set, check VMBOX|Vagrantfile.conf file(s)")
 conf["VMMEMORY"] ||= 4096
 conf["VMCPUS"]  ||= 2
-conf["HOMEDIR"]  ||= "/home/" + conf["MYUSER"] if conf["MYUSER"]
+conf["HOMEDIR"]  ||= File.expand_path('~' + conf["MYUSER"]) if conf["MYUSER"]
 conf["HOSTNAME"] ||= File.basename(File.dirname(File.absolute_path(__FILE__)))
 conf["PROVARGS"] ||= ["-d"]
 conf["PROVPATH"] ||= File.join(File.dirname(File.absolute_path(__FILE__)),
@@ -66,7 +66,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
   config.vm.host_name = conf["HOSTNAME"]
   if conf["HOMEDIR"]
-    config.vm.synced_folder conf["HOMEDIR"], conf["HOMEDIR"]
+    config.vm.synced_folder conf["HOMEDIR"],
+                            "/home/" + File.basename(conf["HOMEDIR"])
   end
 
   # virtualbox: mmap broken on mapped filesystems
@@ -90,6 +91,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provider :libvirt do |vd|
     vd.memory = conf["VMMEMORY"]
     vd.cpus = conf["VMCPUS"]
+  end
+  config.vm.provider :parallels do |prl|
+    prl.memory = conf["VMMEMORY"]
+    prl.cpus = conf["VMCPUS"]
+    prl.name = conf["VMNAME"] if conf["VMNAME"]
+  end
+  config.vm.provider :vmware_fusion do |vmw|
+    vmw.vmx["memsize"] = conf["VMMEMORY"]
+    vmw.vmx["numvcpus"] = conf["VMCPUS"]
+    vmw.vmx["displayName"] = conf["VMNAME"] if conf["VMNAME"]
   end
 
   # http://fgrehm.viewdocs.io/vagrant-cachier
