@@ -142,6 +142,14 @@ EOF
         "$ZIMBRA_HOME/common/var" \
         "$ZIMBRA_HOME/common/etc/openldap" \
         "$ZIMBRA_HOME/common/etc/openldap/schema"
+
+    if [[ "$dist" = "ubuntu" ]]; then
+        install -d /etc/profile.d
+        install -m 755 /vagrant/scripts/zimbra-profile.sh /etc/profile.d
+
+        install -m 755 /vagrant/scripts/dev-init.sh /etc/init.d/zimbra
+        update-rc.d zimbra defaults
+    fi
 }
 
 # run
