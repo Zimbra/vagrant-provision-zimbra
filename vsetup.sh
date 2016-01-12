@@ -189,6 +189,9 @@ function _install_zdevtools ()
 {
     _install_p4client
     _install python-pip && pip install -U RBTools # reviewboard
+
+    [[ "$dist" = "ubuntu" ]] && _install libnss-mdns
+    [[ "$dist" = "centos" ]] && _install nss-mdns
 }
 
 function _install_dirs ()
