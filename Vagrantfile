@@ -90,6 +90,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.cache.scope = :box
   end
 
+  # https://github.com/tmatilai/vagrant-timezone
+  if Vagrant.has_plugin?("vagrant-timezone")
+    config.timezone.value = :host
+  end
+
   # this triggers a warning with lxc, but we work around that earlier
   if conf["VMBRIDGE"]
     config.vm.network "public_network", bridge: conf["VMBRIDGE"]
