@@ -3,29 +3,46 @@
 
 In order to use these, you'll need to have Vagrant [installed](https://www.vagrantup.com/downloads.html) and [get familiar](https://docs.vagrantup.com/v2/) with how to use it.
 
-If you run into problems with the fgrehm/centos-6-64-lxc vagrant box, this supports the use of a [Docker](https://www.docker.com/) container with Vagrant (currently for centos6 only!), see the Docker website for [installation procedures](https://docs.docker.com/installation/).
+If you run into problems with the `fgrehm/centos-6-64-lxc` vagrant box, this supports the use of a [Docker](https://www.docker.com/) container with Vagrant (currently for centos6 only!), see the Docker website for [installation procedures](https://docs.docker.com/installation/).
 
 ## Quick Start
 
 ### Getting a box up...
 
-If you have git, [Vagrant](https://www.vagrantup.com/) [VirtualBox](https://www.virtualbox.org/) installed, here's a relatively quick way (using vagrant-lxc is faster!) to get a box up...
+First, you need to install Git and [Vagrant](https://www.vagrantup.com/), and clone this repository:
 
 ```
 $ mkdir -p ~/vagrant/u14test
 $ cd ~/vagrant/u14test/
-$ git clone https://github.com/plobbes/vagrant-provision-zimbra .
+$ git clone https://github.com/Zimbra/vagrant-provision-zimbra .
 Cloning into '.'...
 [snip]
-$ echo "ubuntu/trusty64" > VMBOX  # fgrehm/trusty64-lxc for vagrant-lxc
-$ vagrant up --provider virtualbox 2>&1 | tee -a up.$(basename $PWD)
+```
+
+Second, install a few convenient vagrant plugins: [`vagrant-timezone`](https://github.com/tmatilai/vagrant-timezone) ensures that the box gets the same timezone as the your machine, and [`vagrant-cachier`](https://github.com/fgrehm/vagrant-cachier) speeds up consecutive creations of the box. (Skip the latter for one-off creations, or to save a bit of disk space.)
+
+```
+$ vagrant install vagrant-timezone vagrant-cachier
+Installing the 'vagrant-timezone' plugin. This can take a few minutes...
+[snip]
+```
+
+A note on providers:
+
+* On Linux, the `lxc` provider avoids the VM overhead, and so is very fast. Use it if possible — it requires the [`vagrant-lxc`](https://github.com/fgrehm/vagrant-lxc) plugin.
+* The default [`virtualbox`](https://www.virtualbox.org/) provider is included with vagrant and works everywhere, but is somewhat slow. Vagrant will download *VirtualBox* if necessary.
+* On OS X, the `parallels` provider is much faster than *VirtualBox*, but requires either *Parallels Desktop 9* or the *Pro* or *Business* editions of newer releases. The plugin is called [`vagrant-parallels`](https://github.com/Parallels/vagrant-parallels).
+* *VMware Fusion* and *VMware Workstation* may work with the appropriate provider, but since the provider isn't freely available, it remains untested.
+* The ``libvirt`` provider — from the [``vagrant-libvirt``](https://github.com/pradels/vagrant-libvirt) plugin — is a slightly faster alternative to *VirtualBox* on Linux. To use it, you'll need to install the [``vagrant-mutate``](https://github.com/sciurus/vagrant-mutate) plugin and convert the box: ``vagrant mutate ubuntu/trusty64 libvirt``
+
+Now, deploy the appliance, and log into it.
+
+```
+$ vagrant up --provider virtualbox
 $ vagrant ssh
 ```
 
-If you have [vagrant-lxc](https://github.com/fgrehm/vagrant-lxc) installed, you may want to one of the *-lxc vagrant boxes (VMBOX) listed below instead of using VirtualBox to avoid the VM overhead.  Also, if you frequently create/destroy VMs of the same type, consider using [vagrant-cachier](https://github.com/fgrehm/vagrant-cachier) to avoid having to redownload updated packages over and over again.
-
 Refs:
-* ubuntu/trusty64 - https://atlas.hashicorp.com/ubuntu/boxes/trusty64
 * vagrant cli - http://docs.vagrantup.com/v2/cli/
 
 ### Working with Zimbra code
@@ -45,7 +62,7 @@ If you're going to be doing ZCS development (PROVARGS = -d) under multiple VMs/B
 
 * [vsetup.sh](vsetup.sh)
 
-A vagrant provisioning script for centos{6,7}/ubuntu{12,14}:
+A vagrant provisioning script for CentOS 6 & 7 and Ubuntu LTS:
 
 ```
 Usage: vsetup.sh <[-b][-d][-r]>
@@ -58,37 +75,9 @@ Usage: vsetup.sh <[-b][-d][-r]>
         building the components from ThirdParty)
 ```
 
+The provided ``Vagrantfile.conf`` provides access to most settings you might want to play with for the VM to be provisioned:
+
 * [Vagrantfile](Vagrantfile) and [Vagrantfile.conf](Vagrantfile.conf)
-
-The provided Vagrantfile.conf provides access to most settings you might want to play with for the VM to be provisioned.  Set the variables as appropriate for your environment:
-
-```
-# Notes:
-# - HOSTNAME defaults to current directory name if not specified
-# - PROVARGS defaults to "-b" unless HOSTNAME ends in d or dev ("-d")
-#   -b == build, -d == dev, -r == runtime
-# Additional optional config items:
-#   MYUSER, HOMEDIR, SRCDIR
-
-#HOSTNAME = somename    # defaults to basename of $PWD
-#MYUSER = ppearl        # used to map my home into the VM
-#SRCDIR = "/site"       # map my source directory into the VM
-
-# provisioning script and args # -b == build, -d == dev, -r == runtime
-# - set PROVARGS based on hostname (-d if name ends in d or dev)
-#PROVARGS =                                    # config.vm.provision "args:"
-#PROVPATH = vsetup.sh                          # config.vm.provision "path:"
-#PROVCUSTOM = /vagrant/vsetup.custom.sh        # config.vm.provision "inline:"
-
-# Note: optionally put the value for VMBOX in a file named VMBOX
-# - boxes ref: https://atlas.hashicorp.com/boxes/search
-#VMBOX = "fgrehm/precise64-lxc"
-#VMBOX = "fgrehm/trusty64-lxc"
-#VMBOX = "centos6"                # via docker
-#VMBOX = "fgrehm/centos-6-64-lxc" # if this hangs, use docker...
-#VMBOX = "frensjan/centos-7-64-lxc"
-#VMBOX = "ubuntu/trusty64"
-```
 
 ### Potential issues:
 
