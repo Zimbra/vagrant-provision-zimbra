@@ -102,7 +102,11 @@ function env_all_pre_ubuntu () {
     apt-get install -y software-properties-common
 }
 
-function env_all_post () { [[ "$dist" = "ubuntu" ]] && env_all_post_$dist; }
+function env_all_post () {
+    _install git
+
+    [[ "$dist" = "ubuntu" ]] && env_all_post_$dist
+}
 function env_all_post_ubuntu () {
     say "Running apt-get dist-upgrade..."
     apt-get update -y -qq && apt-get dist-upgrade -y -qq
@@ -216,7 +220,6 @@ function _install_buildtools ()
         gcc tar
         m4 # heimdal
         mercurial zip # openjdk
-        git # cluebringer
     )
     _install "${pkgs[@]}"
     _install_buildtools_$dist
