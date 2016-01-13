@@ -205,8 +205,7 @@ function _install_zdevtools ()
 function _install_dirs ()
 {
     say "Creating directories: $*"
-    # 'vagrant' is a member of use sudo, as are developers likely to be
-    install -m a+rx,g+w -g sudo -d "$@"
+    install -m a+rx,ug+w,+t -g vagrant -d "$@"
 }
 
 # build environment
