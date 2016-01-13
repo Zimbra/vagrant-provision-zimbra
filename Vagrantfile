@@ -33,7 +33,6 @@ end
 #   MYUSER, HOMEDIR, SRCDIR
 conf = load_conf("Vagrantfile.conf")
 
-conf["VMBOX"]    || abort("error: VMBOX not set, check VMBOX|Vagrantfile.conf file(s)")
 conf["VMMEMORY"] ||= 4096
 conf["VMCPUS"]  ||= 2
 conf["HOMEDIR"]  ||= File.expand_path('~' + conf["MYUSER"]) if conf["MYUSER"]
@@ -43,7 +42,7 @@ conf["PROVPATH"] ||= File.join(File.dirname(File.absolute_path(__FILE__)),
                                "vsetup.sh")
 
 if /^(?:up|provision|ssh|status)/.match(ARGV[0])
-  print "HOSTNAME (VMBOX): ", conf["HOSTNAME"], " (", conf["VMBOX"], ")\n"
+  print "HOSTNAME (VMBOX): ", conf["HOSTNAME"], " (", conf["VMBOX"] || "default", ")\n"
   if /^(?:up|provision)/.match(ARGV[0])
     print "Provision path (args): ", conf["PROVPATH"], " (", conf["PROVARGS"] * " ", ")\n"
     if conf["SRCDIR"]
@@ -61,8 +60,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       docker.has_ssh = true
       docker.name = conf["HOSTNAME"]
     end
-  else
-    config.vm.box = conf["VMBOX"]
   end
   config.vm.host_name = conf["HOSTNAME"]
   if conf["HOMEDIR"]
@@ -79,32 +76,42 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.nfs.map_uid = Process.uid
   config.nfs.map_gid = Process.gid
 
-  config.vm.provider :lxc do |lxc|
+  config.vm.provider :lxc do |lxc, o|
+    o.vm.box = conf["VMBOX"] || "fgrehm/trusty64-lxc"
+
     lxc.container_name = conf["VMNAME"] if conf["VMNAME"]
     lxc.customize "network.link", conf["VMBRIDGE"] if conf["VMBRIDGE"]
   end
-  config.vm.provider :virtualbox do |vb|
+  config.vm.provider :virtualbox do |vb, o|
+    o.vm.box = conf["VMBOX"] || "ubuntu/trusty64"
+
     vb.memory = conf["VMMEMORY"]
     vb.cpus = conf["VMCPUS"]
     vb.name = conf["VMNAME"] if conf["VMNAME"]
   end
-  config.vm.provider :libvirt do |vd|
+  config.vm.provider :libvirt do |vd, o|
+    o.vm.box = conf["VMBOX"] || "ubuntu/trusty64"
+
     vd.memory = conf["VMMEMORY"]
     vd.cpus = conf["VMCPUS"]
   end
-  config.vm.provider :parallels do |prl|
+  config.vm.provider :parallels do |prl, o|
+    o.vm.box = conf["VMBOX"] || "parallels/ubuntu-14.04"
+
     prl.memory = conf["VMMEMORY"]
     prl.cpus = conf["VMCPUS"]
     prl.name = conf["VMNAME"] if conf["VMNAME"]
   end
-  config.vm.provider :vmware_fusion do |vmw|
+  config.vm.provider :vmware_fusion do |vmw, o|
+    o.vm.box = conf["VMBOX"] || "phusion/ubuntu-14.04-amd64"
+
     vmw.vmx["memsize"] = conf["VMMEMORY"]
     vmw.vmx["numvcpus"] = conf["VMCPUS"]
     vmw.vmx["displayName"] = conf["VMNAME"] if conf["VMNAME"]
   end
 
   # http://fgrehm.viewdocs.io/vagrant-cachier
-  if config.vm.box.is_a?(String) && Vagrant.has_plugin?("vagrant-cachier")
+  if Vagrant.has_plugin?("vagrant-cachier")
     config.cache.scope = :box
   end
 
