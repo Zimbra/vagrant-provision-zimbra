@@ -102,7 +102,11 @@ function env_all_pre_ubuntu () {
     apt-get install -y software-properties-common
 }
 
-function env_all_post () { [[ "$dist" = "ubuntu" ]] && env_all_post_$dist; }
+function env_all_post () {
+    _install git
+
+    [[ "$dist" = "ubuntu" ]] && env_all_post_$dist
+}
 function env_all_post_ubuntu () {
     say "Running apt-get dist-upgrade..."
     apt-get update -y -qq && apt-get dist-upgrade -y -qq
@@ -138,6 +142,14 @@ EOF
         "$ZIMBRA_HOME/common/var" \
         "$ZIMBRA_HOME/common/etc/openldap" \
         "$ZIMBRA_HOME/common/etc/openldap/schema"
+
+    if [[ "$dist" = "ubuntu" ]]; then
+        install -d /etc/profile.d
+        install -m 755 /vagrant/scripts/zimbra-profile.sh /etc/profile.d
+
+        install -m 755 /vagrant/scripts/dev-init.sh /etc/init.d/zimbra
+        update-rc.d zimbra defaults
+    fi
 }
 
 # run
@@ -184,14 +196,16 @@ function _install_p4client ()
 function _install_zdevtools ()
 {
     _install_p4client
-    _install python-setuptools && easy_install -U RBTools # reviewboard
+    _install python-pip && pip install -U RBTools # reviewboard
+
+    [[ "$dist" = "ubuntu" ]] && _install libnss-mdns
+    [[ "$dist" = "centos" ]] && _install nss-mdns
 }
 
 function _install_dirs ()
 {
     say "Creating directories: $*"
-    # 'vagrant' is a member of use sudo, as are developers likely to be
-    install -m a+rx,g+w -g sudo -d "$@"
+    install -m a+rx,ug+w,+t -g vagrant -d "$@"
 }
 
 # build environment
@@ -216,7 +230,6 @@ function _install_buildtools ()
         gcc tar
         m4 # heimdal
         mercurial zip # openjdk
-        git # cluebringer
     )
     _install "${pkgs[@]}"
     _install_buildtools_$dist
