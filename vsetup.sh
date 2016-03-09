@@ -112,27 +112,17 @@ function env_all_post_ubuntu () {
     apt-get update -y -qq && apt-get dist-upgrade -y -qq
 }
 
-# dev - ideally java is alrady installed before ant and maven
+# dev - ideally java is already installed before ant and maven
 function env_dev ()
 {
     env_run
     _install_java 7 # JP dev requirement
     _install_zdevtools # reviewboard
-    _install memcached redis-server
+    _install memcached
+    #OFF _install redis-server # AlwaysOn / main
     _install_mariadb_server
-    _install_consul 0.5.2
+    #OFF _install_consul 0.5.2 # AlwaysOn / main
     _link_zimbra_common
-
-    if [[ "$dist" = "ubuntu" ]]; then
-        say "Adding Zimbra repository ..."
-        _install apt-transport-https
-        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9BE6ED79
-        cat > /etc/apt/sources.list.d/zimbra.list <<EOF
-deb [arch=amd64] https://repo.zimbra.com/apt/87 $(lsb_release -cs) zimbra
-deb-src [arch=amd64] https://repo.zimbra.com/apt/87 $(lsb_release -cs) zimbra
-EOF
-        apt-get update -y -qq
-    fi
 
     _install zimbra-openldap-server zimbra-openldap-client zimbra-rsync \
              zimbra-openssl zimbra-openjdk zimbra-openjdk-cacerts \
@@ -168,8 +158,32 @@ function env_build () { _install_buildtools; }
 function env_build_dev ()
 {
     _install make
-    _install_java 8
+    #OFF _install_java 8
     _install_ant_maven
+    env_build_dev_$dist
+}
+function env_build_dev_centos () {
+    say "Adding Zimbra repository ..."
+    rpm --import https://files.zimbra.com/downloads/security/public.key
+    cat > /etc/yum.repos.d/zimbra.repo <<EOF
+[zimbra]
+name=Zimbra RPM Repository
+baseurl=https://repo.zimbra.com/rpm/87/rhel$(lsb_release -rs | cut -f1 -d.)
+gpgcheck=1
+enabled=1
+EOF
+    yum -q --disablerepo=* --enablerepo=zimbra clean metadata
+    yum -q --disablerepo=* --enablerepo=zimbra --noplugins check-update
+}
+function env_build_dev_ubuntu () {
+    say "Adding Zimbra repository ..."
+    _install apt-transport-https
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9BE6ED79
+    cat > /etc/apt/sources.list.d/zimbra.list <<EOF
+deb [arch=amd64] https://repo.zimbra.com/apt/87 $(lsb_release -cs) zimbra
+deb-src [arch=amd64] https://repo.zimbra.com/apt/87 $(lsb_release -cs) zimbra
+EOF
+    apt-get update -y -qq
 }
 
 ###
@@ -291,16 +305,6 @@ function _install_java_ubuntu_openjdk ()
         _install openjdk-${v}-jdk
         update-java-alternatives -s java-1.${v}.0-openjdk-amd64
     done
-}
-function _install_java_ubuntu_oracle ()
-{
-    _add_repo ppa:webupd8team/java
-    for v in "$@"; do
-        debconf-set-selections <<< "oracle-java${v}-installer shared/accepted-oracle-license-v1-1 select true"
-        # hide the wget progress output
-        _install oracle-java${v}-installer 2>&1 | grep --line-buffered -v " ........ "
-    done
-    #OFF update-java-alternatives -s java-7-oracle
 }
 
 function _link_zimbra_common ()
