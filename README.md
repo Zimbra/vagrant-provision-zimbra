@@ -22,7 +22,7 @@ Cloning into '.'...
 Second, install a few convenient vagrant plugins: [`vagrant-timezone`](https://github.com/tmatilai/vagrant-timezone) ensures that the box gets the same timezone as the your machine, and [`vagrant-cachier`](https://github.com/fgrehm/vagrant-cachier) speeds up consecutive creations of the box. (Skip the latter for one-off creations, or to save a bit of disk space.)
 
 ```
-$ vagrant install vagrant-timezone vagrant-cachier
+$ vagrant plugin install vagrant-timezone vagrant-cachier
 Installing the 'vagrant-timezone' plugin. This can take a few minutes...
 [snip]
 ```
