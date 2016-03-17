@@ -94,6 +94,8 @@ function env_all_pre ()
 function env_all_pre_centos () {
     say "Running yum makecache fast..."
     yum makecache fast
+    say "Installing lsb_release..."
+    yum yum install -y redhat-lsb-core
 }
 function env_all_pre_ubuntu () {
     export DEBIAN_FRONTEND=noninteractive
