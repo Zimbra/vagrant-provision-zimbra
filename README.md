@@ -31,6 +31,7 @@ A note on providers:
 
 * On Linux, the `lxc` provider avoids the VM overhead, and so is very fast. Use it if possible — it requires the [`vagrant-lxc`](https://github.com/fgrehm/vagrant-lxc) plugin.
 * The default [`virtualbox`](https://www.virtualbox.org/) provider is included with vagrant and works everywhere, but is somewhat slow. Vagrant will download *VirtualBox* if necessary.
+* To use the [`centos/7`](https://atlas.hashicorp.com/centos/boxes/7) box with VirtualBox and Shared Folders, the `vagrant-vbguest` plugin should be installed first.
 * On OS X, the `parallels` provider is much faster than *VirtualBox*, but requires either *Parallels Desktop 9* or the *Pro* or *Business* editions of newer releases. The plugin is called [`vagrant-parallels`](https://github.com/Parallels/vagrant-parallels).
 * *VMware Fusion* and *VMware Workstation* may work with the appropriate provider, but since the provider isn't freely available, it remains untested.
 * The ``libvirt`` provider — from the [``vagrant-libvirt``](https://github.com/pradels/vagrant-libvirt) plugin — is a slightly faster alternative to *VirtualBox* on Linux. To use it, you'll need to install the [``vagrant-mutate``](https://github.com/sciurus/vagrant-mutate) plugin and convert the box: ``vagrant mutate ubuntu/trusty64 libvirt``
