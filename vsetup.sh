@@ -168,7 +168,7 @@ function env_build_dev_centos () {
     cat > /etc/yum.repos.d/zimbra.repo <<EOF
 [zimbra]
 name=Zimbra RPM Repository
-baseurl=https://repo.zimbra.com/rpm/87/rhel$(lsb_release -rs | cut -f1 -d.)
+baseurl=https://repo.zimbra.com/rpm/87/rhel$(rpm -qa --queryformat '%{VERSION}\n' '(redhat|sl|slf|centos|oraclelinux)-release(|-server|-workstation|-client|-computenode)')
 gpgcheck=1
 enabled=1
 EOF
