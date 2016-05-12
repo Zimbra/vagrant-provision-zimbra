@@ -49,7 +49,8 @@ Usage: $prog <[-b][-d][-r]>
     -r  == runtime     Runtime for ZCS (curl,gzip,libaio,netcat,sysstat,tar,wget)
 
   Notes:
-   - build|dev installs: ant,java,make,maven
+   - dev: ant, maven, java
+   - build|dev installs: make
    - development uses non-standard ZCS components (instead of building
      the components from ThirdParty)
 
@@ -116,6 +117,7 @@ function env_all_post_ubuntu () {
 function env_dev ()
 {
     env_run
+    _install_ant_maven # ant/maven for dev env
     _install_java 7 # JP dev requirement
     _install_zdevtools # reviewboard
     _install memcached
@@ -159,7 +161,6 @@ function env_build_dev ()
 {
     _install make
     #OFF _install_java 8
-    _install_ant_maven
     env_build_dev_$dist
 }
 function env_build_dev_centos () {
